@@ -1,0 +1,111 @@
+state_space:
+  age:
+    type: integer_grid
+    start: 16
+    lowest: 16
+    highest: 32
+    fixed: False
+  schooling:
+    type: list
+    start: vmbo
+    list:
+      - vmbo
+      - havo
+      - mbo3
+      - mbo4
+      - hbo
+    fixed: False
+  lagged_choice:
+    type: list
+    start: vmbo
+    list:
+      - vmbo
+      - havo
+      - mbo3
+      - mbo4
+      - hbo
+    fixed: False
+  parental_income:
+    type: list
+    start: random
+    list:
+      - 0
+      - 1
+      - 2
+      - 3
+    fixed: True
+  ability:
+    type: list
+    start: random
+    fixed: True
+    list:
+      - 0
+      - 1
+      - 2
+      - 3
+
+choices:
+  terminal_choices:
+    - vocational_work
+    - academic_work
+  choice_sets:
+    havo:
+      - (schooling=='vmbo')&(age<26)&(lagged_choice=='vmbo')
+    mbo4:
+      - (schooling=='mbo3')&(age<28)&(lagged_choice=='mbo3')
+      - (schooling=='vmbo')&(age<28)&(lagged_choice=='vmbo')
+      - (schooling=='vmbo')&(age<28)&(lagged_choice=='havo')
+    mbo3:
+      - (schooling=='vmbo')&(age<25)
+    hbo:
+      - (schooling=='mbo4')&(age<31)&(lagged_choice=='mbo4')
+      - (schooling=='havo')&(age<31)&(lagged_choice=='havo')
+    vocational_work:
+      - (schooling=='mbo4')
+      - (schooling=='mbo3')
+      - (schooling=='havo')
+      - (schooling=='vmbo')
+    academic_work:
+      - (schooling=='hbo')
+  choice_sets_solution:
+    havo:
+      - (schooling=='vmbo')&(age==16)&(lagged_choice=='vmbo')
+    mbo4:
+      - (schooling=='mbo3')&(age<22)&(lagged_choice=='mbo3')
+      - (schooling=='vmbo')&(age==16)&(lagged_choice=='vmbo')
+      - (schooling=='vmbo')&(age<22)&(lagged_choice=='havo')
+    mbo3:
+      - (schooling=='vmbo')&(age<22)&(lagged_choice=='mbo4')
+      - (schooling=='vmbo')&(age<22)&(lagged_choice=='havo')
+      - (schooling=='vmbo')&(age==16)&(lagged_choice=='vmbo')
+    hbo:
+      - (schooling=='mbo4')&(age<25)&(lagged_choice=='mbo4')
+      - (schooling=='havo')&(age<25)&(lagged_choice=='havo')
+    vocational_work:
+      - (schooling=='mbo4')
+      - (schooling=='mbo3')
+      - (schooling=='havo')
+      - (schooling=='vmbo')&(lagged_choice!='vmbo')
+    academic_work:
+      - (schooling=='hbo')
+      
+
+covariates:
+  terminal: age==31
+  constant: 1
+  uni_dropout: schooling!='hbo' & lagged_choice == 'hbo'
+  
+state_space_filter:
+  - age==15 & lagged_choice!='vmbo'
+  - age==15 & schooling!='vmbo'
+  - age>20  & lagged_choice=='vmbo'
+  - age<17 & schooling=='mbo4'
+  - age<17 & schooling=='mbo3'
+  - age<20 & schooling=='hbo'
+  - age==16 & schooling!='vmbo'
+  - schooling!='vmbo' & lagged_choice=='vmbo'
+  - schooling=='havo' & lagged_choice=='mbo3'
+  - schooling=='mbo3' & lagged_choice=='havo'
+  - schooling=='mbo3' & lagged_choice=='hbo'
+  - schooling=='vmbo' & lagged_choice=='hbo'
+n_simulation_agents: 10000
