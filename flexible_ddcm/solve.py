@@ -6,15 +6,18 @@ import numpy as np
 import pandas as pd
 import scipy
 
-from src.model.example.input_functions import map_transition_to_state_choice_entries
-from src.model.example.input_functions import reward_functions
-from src.model.example.input_functions import transition_function
-from src.model.rewards import calculate_rewards_state_choice_space
-from src.model.state_space import create_state_space
-from src.model.transitions import build_transition_func_from_params
+from flexible_ddcm.rewards import calculate_rewards_state_choice_space
+from flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.transitions import build_transition_func_from_params
 
 
-def solve(params, model_options, transition_function, reward_function):
+def solve(
+        params,
+        model_options,
+        transition_function,
+        reward_function,
+        map_transition_to_state_choice_entries
+        ):
     # Need to put into options.
     segmentation_column = "age"
 
@@ -63,6 +66,7 @@ def solve(params, model_options, transition_function, reward_function):
                     choices,
                     params,
                     state_space,
+                    map_transition_to_state_choice_entries
                 )
                 continuation_values.loc[
                     locs_variable, "continuation_value"
@@ -89,6 +93,7 @@ def get_choice_specific_values(
     choices,
     params,
     state_space,
+    map_transition_to_state_choice_entries
 ):
     out = pd.DataFrame(
         index=transitions[(choices[0], variable_point)].index, columns=choices
@@ -104,6 +109,7 @@ def get_choice_specific_values(
             params.loc[("discount", "discount")].iloc[0],
             continuation_values,
             state_space,
+            map_transition_to_state_choice_entries
         ).sum(axis=1)
 
     return out, get_expected_value_ev_shocks(
@@ -112,7 +118,13 @@ def get_choice_specific_values(
 
 
 def get_continuation_value_for_transitions(
-    transitions, choice, rewards, discount, continuation_values, state_space
+    transitions,
+    choice,
+    rewards,
+    discount,
+    continuation_values,
+    state_space,
+    map_transition_to_state_choice_entries
 ):
     out = pd.DataFrame(index=transitions.index, columns=transitions.columns)
 

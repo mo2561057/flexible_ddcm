@@ -1,14 +1,8 @@
-"""
-Handles all transitions.
-Should we give them as functions?
-How would we refer to age in this setting?
-
-"""
+"""Manages transitions."""
 import numpy as np
 
 
 def build_transition_func_from_params(params, state_space, transition_function):
-    """Transitions from"""
     grouper = state_space.state_space.groupby(["variable_key"]).groups
 
     out = {}

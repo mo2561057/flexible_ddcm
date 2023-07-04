@@ -1,28 +1,46 @@
-import copy
-import functools
-
-import numpy as np
+"""Utilities. Gneral model spec utilities."""
 import pandas as pd
-import scipy
-
 from flexible_ddcm.shared import pandas_dot
 
-# scaling_options = bounds
+
+def map_transition_to_state_choice_entries(
+        initial,
+        choice,
+        arrival,
+        state_space,
+        get_between_states):
+    # Add n states attribute to state space.
+    arrival_state = (
+        tuple(state_space.state_space.loc[arrival])[:-1] if arrival else arrival
+    )
+    initial_state = tuple(state_space.state_space.loc[initial])[:-1]
+
+    """In this case only the initial state"""
+    if arrival_state is None:
+        return [state_space.state_choice_space_indexer[(*initial_state, choice)]]
+    else:
+
+        state_tuples = get_between_states(initial_state, arrival_state, choice) 
+    return [
+            state_space.state_choice_space_indexer[tuple_] for tuple_ in state_tuples
+        ]
+
+def between_states_age_variable(
+        initial_state,
+        arrival_state,
+        choice):
+    age_initial = initial_state[0]
+    age_arrival = arrival_state[0]
+    return [(x, *initial_state[1:], choice) \
+            for x in range(age_initial, age_arrival)]
 
 
-TRANSITION_FUNCTION = {
-    "havo": "combined_logit_length",
-    "mbo4": "combined_logit_length",
-    "mbo3": "poisson_length",
-    "mbo2": "poisson_length",
-    "hbo": "combined_logit_length",
-    "vocational_work": "work_transition",
-    "academic_work": "work_transition",
-}
-
-
-def reward_function(state_choice_space, params):
-    """Simply map state choice to reward."""
+def reward_function(
+        state_choice_space,
+        params,
+        reward_functions
+        ):
+    """Map state choice to reward."""
     grouper = state_choice_space.groupby(["choice"]).groups
     list_dfs = [
         reward_functions[choice](state_choice_space.loc[locs], params)
@@ -31,7 +49,12 @@ def reward_function(state_choice_space, params):
     return pd.concat(list_dfs)
 
 
-def transition_function(states, choice, params, variable_state):
+def transition_function(
+        states,
+        choice,
+        params,
+        variable_state,
+        transition_functions):
     """
     Maps an old state into a probability distribution of new states.
         Input:
@@ -42,14 +65,17 @@ def transition_function(states, choice, params, variable_state):
             dict:
               keys are state tuples and values are probabilities.
     """
-    function_ = TRANSITION_FUNCTION[choice]
+    function_ = transition_functions[choice]
+    kwargs = {
+        "states":states,
+        "choice":choice,
+        "params":params,
+        "variable_state":variable_state
 
-    if function_ == "combined_logit_length":
-        return combined_logit_length(states, params, choice, variable_state)
-    elif function_ == "poisson_length":
-        return poisson_length(states, params, choice, variable_state)
-    elif function_ == "work_transition":
-        return work_transition(states)
+    }
+    return function_(
+        **{key:value for key, value \
+           in kwargs.items() if key in function_.__code__.co_varnames})
 
 
 def work_transition(states):
@@ -150,44 +176,3 @@ def lifetime_wages(state_choice_space, params, wage_key, nonpec_key, discount_ke
     out.name = "value"
     return pd.DataFrame(out)
 
-
-def map_transition_to_state_choice_entries(initial, choice, arrival, state_space):
-    # Add n states attribute to state space.
-    arrival_state = (
-        tuple(state_space.state_space.loc[arrival])[:-1] if arrival else arrival
-    )
-    initial_state = tuple(state_space.state_space.loc[initial])[:-1]
-
-    """In this case only the initial state"""
-    if arrival_state is None:
-        return [state_space.state_choice_space_indexer[(*initial_state, choice)]]
-    else:
-        age_initial = initial_state[0]
-        age_arrival = arrival_state[0]
-        state_tuples = [
-            (x, initial_state[1], *initial_state[2:-1], choice)
-            for x in range(age_initial, age_arrival)
-        ]
-        return [
-            state_space.state_choice_space_indexer[tuple_] for tuple_ in state_tuples
-        ]
-
-
-reward_functions = {
-    "mbo4": functools.partial(nonpecuniary_reward, subset="nonpec_mbo4"),
-    "havo": functools.partial(nonpecuniary_reward, subset="nonpec_havo"),
-    "mbo3": functools.partial(nonpecuniary_reward, subset="nonpec_mbo3"),
-    "hbo": functools.partial(nonpecuniary_reward, subset="nonpec_hbo"),
-    "vocational_work": functools.partial(
-        lifetime_wages,
-        nonpec_key="nonpec_vocational",
-        wage_key="wage_vocational",
-        discount_key=("discount", "discount"),
-    ),
-    "academic_work": functools.partial(
-        lifetime_wages,
-        nonpec_key="nonpec_academic",
-        wage_key="wage_academic",
-        discount_key=("discount", "discount"),
-    ),
-}

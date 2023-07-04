@@ -4,8 +4,8 @@ import itertools
 import numpy as np
 import pandas as pd
 
-from src.model.shared import build_covariates
-from src.model.shared import pandas_dot
+from flexible_ddcm.shared import build_covariates
+from flexible_ddcm.shared import pandas_dot
 from src.estimation.config import SCHOOLING_LEVELS
 
 

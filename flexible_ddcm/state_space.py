@@ -1,17 +1,11 @@
-"""
-Build state space objects required to solve the model.
-How many states would I need? 
-Do I need to distinguish between observables and unobservables?
-how is the state choice space supposed to look like?
-"""
+"""Build state space objects required to solve the model."""
 import functools
-import itertools
 from collections import namedtuple
 
 import numpy as np
 import pandas as pd
 
-from src.model.shared import build_covariates
+from flexible_ddcm.shared import build_covariates
 
 
 def create_state_space(model_options):

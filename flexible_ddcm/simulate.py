@@ -1,17 +1,19 @@
 import functools
-import os
 
 import numpy as np
 import pandas as pd
 
-from src.model.shared import build_covariates
-from src.model.shared import pandas_dot
-from src.model.solve import solve
-from src.model.state_space import create_state_space
+from flexible_ddcm.shared import build_covariates
+from flexible_ddcm.solve import solve
+from flexible_ddcm.state_space import create_state_space
 
 
 def get_simulate_func(
-    model_options, transition_function, reward_function, external_probabilities
+    model_options,
+    transition_function,
+    reward_function,
+    external_probabilities,
+    map_transition_to_state_choice_entries
 ):
     state_space = create_state_space(model_options)
     return functools.partial(
@@ -21,6 +23,8 @@ def get_simulate_func(
         transition_function=transition_function,
         reward_function=reward_function,
         external_probabilities=external_probabilities,
+        map_transition_to_state_choice_entries=\
+            map_transition_to_state_choice_entries
     )
 
 
@@ -31,11 +35,15 @@ def simulate(
     transition_function,
     reward_function,
     external_probabilities,
+    map_transition_to_state_choice_entries
 ):
 
-    continuation_values, choice_specific_value_functions, transitions = solve(
-        params, model_options, transition_function, reward_function
-    )
+    _, choice_specific_value_functions, transitions = solve(
+        params,
+        model_options,
+        transition_function,
+        reward_function,
+        map_transition_to_state_choice_entries)
 
     simulation_df = _create_simulation_df(
         model_options, state_space, external_probabilities
@@ -78,7 +86,6 @@ def simulate(
 
         next_period_df = pd.concat([next_period_df, terminal_df])
         simulation_data[period + 1] = next_period_df
-        print(period)
         if (~next_period_df["choice"].isna()).all():
             break
 
@@ -94,12 +101,13 @@ def _create_simulation_df(model_options, state_space, external_probabilities):
         index=range(model_options["n_simulation_agents"]),
         columns=model_options["state_space"].keys(),
     )
+
     # Assign all fixed states.
     for state, specs in model_options["state_space"].items():
         if specs["start"] not in ["random_external", "random_internal"]:
             out[state] = specs["start"]
 
-    # Now assign stochastic states. Some
+    # Assign stochastic states
     locs_external = np.random.choice(
         external_probabilities.index,
         p=external_probabilities["probability"],
@@ -115,7 +123,6 @@ def _create_simulation_df(model_options, state_space, external_probabilities):
         locs_external, states_external
     ].values
 
-    # Should add something for within model probs
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(out, state_space, model_options)
     out["choice"] = np.nan
