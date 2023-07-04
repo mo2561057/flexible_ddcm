@@ -32,7 +32,8 @@ def solve(
     )
 
     # Segment state space into chunks that we iterate over.
-    state_grouper = state_space.state_space.groupby(segmentation_column).groups
+    state_grouper = state_space.state_space.groupby(
+        segmentation_column).groups
 
     # Initiate Continuation values
     continuation_values = pd.DataFrame(

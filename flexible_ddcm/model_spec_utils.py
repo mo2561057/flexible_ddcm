@@ -1,5 +1,10 @@
 """Utilities. Gneral model spec utilities."""
+import functools
+
 import pandas as pd
+import numpy as np
+import scipy
+
 from flexible_ddcm.shared import pandas_dot
 
 
@@ -9,11 +14,13 @@ def map_transition_to_state_choice_entries(
         arrival,
         state_space,
         get_between_states):
+    
+    position_stop = len(state_space.states)
     # Add n states attribute to state space.
     arrival_state = (
-        tuple(state_space.state_space.loc[arrival])[:-1] if arrival else arrival
+        tuple(state_space.state_space.loc[arrival])[:position_stop] if arrival else arrival
     )
-    initial_state = tuple(state_space.state_space.loc[initial])[:-1]
+    initial_state = tuple(state_space.state_space.loc[initial])[:position_stop]
 
     """In this case only the initial state"""
     if arrival_state is None:
@@ -38,12 +45,12 @@ def between_states_age_variable(
 def reward_function(
         state_choice_space,
         params,
-        reward_functions
+        choice_reward_functions
         ):
     """Map state choice to reward."""
     grouper = state_choice_space.groupby(["choice"]).groups
     list_dfs = [
-        reward_functions[choice](state_choice_space.loc[locs], params)
+        choice_reward_functions[choice](state_choice_space.loc[locs], params)
         for choice, locs in grouper.items()
     ]
     return pd.concat(list_dfs)
@@ -54,7 +61,7 @@ def transition_function(
         choice,
         params,
         variable_state,
-        transition_functions):
+        choice_transition_functions):
     """
     Maps an old state into a probability distribution of new states.
         Input:
@@ -65,14 +72,12 @@ def transition_function(
             dict:
               keys are state tuples and values are probabilities.
     """
-    function_ = transition_functions[choice]
+    function_ = choice_transition_functions[choice]
     kwargs = {
         "states":states,
         "choice":choice,
         "params":params,
-        "variable_state":variable_state
-
-    }
+        "variable_state":variable_state}
     return function_(
         **{key:value for key, value \
            in kwargs.items() if key in function_.__code__.co_varnames})

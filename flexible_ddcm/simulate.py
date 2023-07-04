@@ -168,7 +168,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
             current_df.loc[locs, "state_key"]
         ]
 
-        cdf = np.array(probabilities.cumsum())
+        cdf = np.array(probabilities.cumsum(axis=1))
         u = np.random.rand(len(cdf), 1)
         indices = (u < cdf).argmax(axis=1)
 

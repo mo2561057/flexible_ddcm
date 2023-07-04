@@ -96,13 +96,13 @@ covariates:
   uni_dropout: schooling!='hbo' & lagged_choice == 'hbo'
   
 state_space_filter:
-  - age==15 & lagged_choice!='vmbo'
-  - age==15 & schooling!='vmbo'
+  - age==16 & lagged_choice!='vmbo'
+  - age==16 & schooling!='vmbo'
   - age>20  & lagged_choice=='vmbo'
   - age<17 & schooling=='mbo4'
   - age<17 & schooling=='mbo3'
   - age<20 & schooling=='hbo'
-  - age==16 & schooling!='vmbo'
+  - age==17 & schooling!='vmbo'
   - schooling!='vmbo' & lagged_choice=='vmbo'
   - schooling=='havo' & lagged_choice=='mbo3'
   - schooling=='mbo3' & lagged_choice=='havo'

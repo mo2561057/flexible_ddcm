@@ -1,67 +1,45 @@
-"""Test all state space components."""
+import numpy as np
+import pandas as pd
 import yaml
 
-import pandas as pd
-import numpy as np
+from flexible_ddcm.example.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.input_functions import transition_function_nonstandard
+from flexible_ddcm.example.input_functions import \
+    map_transition_to_state_choice_entries_nonstandard
+from flexible_ddcm.solve  import solve
+from flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.shared import pandas_dot
+from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 
-from src.model.state_space import create_state_space
-from src.model.state_space import solve
-from src.model.shared import pandas_dot
-from src.model.rewards import calculate_rewards_state_choice_space
-from src.model.example.input_functions import reward_function, transition_function
 
-
-def test_continuation_values():
+def test_continuation_values_transition():
     params = pd.read_csv("src/model/example/params.csv").set_index(["category", "name"])
     model_options = yaml.safe_load(open("src/model/example/specification.yaml"))
-    external_probabilities = pd.read_csv(
-        "src/model/example/external_probabilities.csv"
-    ).drop(columns=["Unnamed: 0"])
+    state_space = create_state_space(model_options)
 
     continuation, choice_value_funcs, transitions = solve(
-        params, model_options, transition_funcs, rewards
-    )
+        params,
+        model_options,
+        transition_function_nonstandard,
+        reward_function_nonstandard,
+        map_transition_to_state_choice_entries_nonstandard)
+    
+    choice_value_funcs[7].loc[0,"havo"]
 
+    # Manually calculate
+    transition_check = transitions[("havo",0)]
 
-def test_wage_rewards():
-    """Here rewards are tested."""
-    params = pd.read_csv("src/model/example/params.csv").set_index(["category", "name"])
-    model_options = yaml.safe_load(open("src/model/example/specification.yaml"))
-    external_probabilities = pd.read_csv(
-        "src/model/example/external_probabilities.csv"
-    ).drop(columns=["Unnamed: 0"])
-    state_space = create_state_space(model_options)
-    rewards_calculated = calculate_rewards_state_choice_space(
-        state_space.state_choice_space, params, reward_function
-    )
+    # Get raw continuation: 
+    next_keys = {
+        col:state_space.state_and_next_variable_key_to_next_state[(0,col)]\
+            for col in transition_check.columns}
+    cont_predicted = {
+        col:continuation.loc[value]*params.loc[("discount","discount"),"value"]**(
+        state_space.state_space.loc[value,"age"]-16) for col,value in next_keys.items()}
+    
+    continuation_predicted_weighted = sum(
+        [cont_predicted[col]*transition_check.loc[0,col] for col in cont_predicted]).iloc[0]
 
-    # Iterate foreward
-    periods = range(20, 55)
-    df = pd.DataFrame()
-    df["age"] = periods
-    df["exp"] = df["age"] - 20
-    df["parental_income"] = 2
-    df["ability"] = 2
-    df["constant"] = 1
-    df["uni_dropout"] = 0
-
-    rewards = pandas_dot(df, params.loc["nonpec_vocational"]) + np.exp(
-        pandas_dot(df, params.loc["wage_vocational"])
-    )
-    full_utility = (
-        rewards.values.reshape(35)
-        * df["exp"].map(lambda x: params.loc[("discount", "discount")].iloc[0] ** x)
-    ).sum()
-
-    sc_point = state_space.state_choice_space_indexer[
-        (20, "mbo4", "mbo4", 2, 2, "vocational_work")
-    ]
-    np.testing.assert_almost_equal(
-        full_utility, rewards_calculated.loc[sc_point].iloc[0]
-    )
-
-
-def test_nonpec_rewards():
-    params = pd.read_csv("src/model/example/params.csv").set_index(["category", "name"])
-
-    model_options = yaml.safe_load(open("src/model/example/specification.yaml"))
+    assert np.isclose(
+        continuation_predicted_weighted,
+        choice_value_funcs[7].loc[0,"havo"])
