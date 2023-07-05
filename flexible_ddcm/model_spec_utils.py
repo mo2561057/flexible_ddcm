@@ -89,6 +89,32 @@ def work_transition(states):
     return out
 
 
+def nonstandard_academic_risk(
+        states, params, choice, variable_state):
+    age, initial_schooling, _ = variable_state
+    dropout = _probit(params.loc[f"transition_risk_{choice}", "value"], states).reshape(
+        states.shape[0], 1
+    )
+
+    length = _poisson_length(
+        params.loc[f"transition_length_{choice}", "value"],
+        states,
+        int(params.loc[("transition_max", choice), "value"]),
+        int(params.loc[("transition_min", choice), "value"]),
+    )
+
+    dropout_length = pd.DataFrame(index=states.index)
+    
+
+
+    out = pd.DataFrame(index=states.index)
+    out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
+    out[[(col + age, initial_schooling, choice) for col in dropout_length]] = (
+        dropout_length * (1 - dropout)
+    ).values
+    return out
+
+
 def combined_logit_length(states, params, choice, variable_state):
     age, initial_schooling, _ = variable_state
     dropout = _probit(params.loc[f"transition_risk_{choice}", "value"], states).reshape(

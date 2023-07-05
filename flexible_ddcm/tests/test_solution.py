@@ -13,8 +13,10 @@ from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 
 
 def test_continuation_values_transition():
-    params = pd.read_csv("src/model/example/params.csv").set_index(["category", "name"])
-    model_options = yaml.safe_load(open("src/model/example/specification.yaml"))
+    params = pd.read_csv(
+        "flexible_ddcm/tests/resources/params.csv").set_index(["category", "name"])
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/tests/resources/specification.yaml"))
     state_space = create_state_space(model_options)
 
     continuation, choice_value_funcs, transitions = solve(

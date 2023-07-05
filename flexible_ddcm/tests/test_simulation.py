@@ -62,22 +62,27 @@ def test_transition_shocks():
 
 
 def test_simulate_func():
-    params = pd.read_csv("src/model/example/params.csv").set_index(["category", "name"])
+    params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
+        ["category", "name"]
+    )
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/tests/resources/specification.yaml"))
+    
+    external_probabilities = pd.read_csv(
+        "flexible_ddcm/tests/resources/external_probabilities.csv"
+    ).drop(columns=["Unnamed: 0"])
+    
     # Set particular returns
     params.loc[("nonpec_mbo3", "constant"), "value"] = 1e10
 
-    model_options = yaml.safe_load(open("src/model/example/specification.yaml"))
-
-    external_probabilities = pd.read_csv(
-        "src/model/example/external_probabilities.csv"
-    ).drop(columns=["Unnamed: 0"])
-
-    simulate_dict = simulate(
+    simulate = get_simulate_func(
         model_options,
-        params,
-        transition_function,
-        reward_function,
+        transition_function_nonstandard,
+        reward_function_nonstandard,
         external_probabilities,
+        map_transition_to_state_choice_entries_nonstandard
     )
+
+    simulate_dict = simulate(params)
 
     assert all(simulate_dict[0].choice == "mbo3")
