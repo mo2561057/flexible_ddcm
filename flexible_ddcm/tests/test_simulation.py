@@ -53,6 +53,7 @@ def test_transition_shocks():
     
     transitions_predicted = transitions_by_keys.index.map(
         lambda ix: transitions[(ix[2],ix[0])].loc[ix[1],ix[3]])
+    
     np.testing.assert_array_almost_equal(
         transitions_predicted.values,
         transitions_by_keys.values,

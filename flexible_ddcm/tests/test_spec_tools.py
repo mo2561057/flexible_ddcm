@@ -70,7 +70,7 @@ def test_poisson_length():
         state_space.state_space.variable_key==0] 
 
     actual = _poisson_length(
-        params.loc[f"transition_length_dropout_mbo4", "value"],
+        params.loc[f"transition_length_mbo4", "value"],
         states,
         int(params.loc[("transition_max", f"mbo4"), "value"]),
         int(params.loc[("transition_min", f"mbo4"), "value"]),
@@ -80,9 +80,9 @@ def test_poisson_length():
     max_ = params.loc[(f"transition_max","mbo4"), "value"]
     
     poisson_vars = params.loc[
-        f"transition_length_dropout_mbo4"].index
+        f"transition_length_mbo4"].index
     lambda_ = sum([states.loc[0,col]*params.loc[
-        (f"transition_length_dropout_mbo4",col), "value"] for col in poisson_vars])
+        (f"transition_length_mbo4",col), "value"] for col in poisson_vars])
     
     def poisson(val,lambda_,min):
         val = val - min

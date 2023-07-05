@@ -1,6 +1,6 @@
 import functools
 
-from flexible_ddcm.model_spec_utils import combined_logit_length
+from flexible_ddcm.model_spec_utils import nonstandard_academic_risk
 from flexible_ddcm.model_spec_utils import poisson_length
 from flexible_ddcm.model_spec_utils import work_transition
 from flexible_ddcm.model_spec_utils import nonpecuniary_reward
@@ -13,10 +13,10 @@ from flexible_ddcm.model_spec_utils import between_states_age_variable
 
 
 choice_transition_functions_nonstandard = {
-    "havo": combined_logit_length,
-    "mbo4": combined_logit_length,
+    "havo": nonstandard_academic_risk,
+    "mbo4": nonstandard_academic_risk,
     "mbo3": poisson_length,
-    "hbo": combined_logit_length,
+    "hbo": nonstandard_academic_risk,
     "vocational_work": work_transition,
     "academic_work": work_transition,
 }

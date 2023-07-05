@@ -103,9 +103,10 @@ def nonstandard_academic_risk(
         int(params.loc[("transition_min", choice), "value"]),
     )
 
-    dropout_length = pd.DataFrame(index=states.index)
-    
-
+    dropout_length = _assign_probabilities(
+        params.loc[f"transition_length_dropout_{choice}", "value"],
+        states
+        )
 
     out = pd.DataFrame(index=states.index)
     out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
@@ -159,6 +160,14 @@ def poisson_length(states, params, choice, variable_state):
 
 def _probit(params, states):
     return scipy.special.softmax(pandas_dot(states, params))
+
+def _assign_probabilities(params, states):
+    out = pd.DataFrame(
+        index=states.index, columns=params.index)
+    for col in out.columns:
+        out[col] = params.loc[col]
+    out.columns = [int(x) for x in out.columns]
+    return out
 
 
 def _poisson_length(params, states, max, min):
