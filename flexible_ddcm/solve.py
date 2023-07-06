@@ -12,12 +12,12 @@ from flexible_ddcm.transitions import build_transition_func_from_params
 
 
 def solve(
-        params,
-        model_options,
-        transition_function,
-        reward_function,
-        map_transition_to_state_choice_entries
-        ):
+    params,
+    model_options,
+    transition_function,
+    reward_function,
+    map_transition_to_state_choice_entries,
+):
     # Need to put into options.
     segmentation_column = "age"
 
@@ -32,8 +32,7 @@ def solve(
     )
 
     # Segment state space into chunks that we iterate over.
-    state_grouper = state_space.state_space.groupby(
-        segmentation_column).groups
+    state_grouper = state_space.state_space.groupby(segmentation_column).groups
 
     # Initiate Continuation values
     continuation_values = pd.DataFrame(
@@ -67,7 +66,7 @@ def solve(
                     choices,
                     params,
                     state_space,
-                    map_transition_to_state_choice_entries
+                    map_transition_to_state_choice_entries,
                 )
                 continuation_values.loc[
                     locs_variable, "continuation_value"
@@ -94,7 +93,7 @@ def get_choice_specific_values(
     choices,
     params,
     state_space,
-    map_transition_to_state_choice_entries
+    map_transition_to_state_choice_entries,
 ):
     out = pd.DataFrame(
         index=transitions[(choices[0], variable_point)].index, columns=choices
@@ -110,7 +109,7 @@ def get_choice_specific_values(
             params.loc[("discount", "discount")].iloc[0],
             continuation_values,
             state_space,
-            map_transition_to_state_choice_entries
+            map_transition_to_state_choice_entries,
         ).sum(axis=1)
 
     return out, get_expected_value_ev_shocks(
@@ -125,7 +124,7 @@ def get_continuation_value_for_transitions(
     discount,
     continuation_values,
     state_space,
-    map_transition_to_state_choice_entries
+    map_transition_to_state_choice_entries,
 ):
     out = pd.DataFrame(index=transitions.index, columns=transitions.columns)
 
@@ -176,7 +175,7 @@ def _map_continuation_to_transition(
         if arrival
         else 0
     )
-    
+
     return continuation_value + functools.reduce(
         lambda x, y: x + y,
         [x * (discount**n) for n, x in enumerate(rewards.loc[locs_rewards].values)],

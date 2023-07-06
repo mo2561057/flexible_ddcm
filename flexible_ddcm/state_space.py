@@ -90,7 +90,7 @@ def create_state_space(model_options):
             "variable_key_to_choice_set",
             "choice_key_to_choice_set",
             "choice_set_to_choice_key",
-            "states"
+            "states",
         ],
     )
 
@@ -107,7 +107,7 @@ def create_state_space(model_options):
         variable_key_to_choice_set,
         choice_key_to_choice_set,
         choice_set_to_choice_key,
-        list(states.keys())
+        list(states.keys()),
     )
 
 

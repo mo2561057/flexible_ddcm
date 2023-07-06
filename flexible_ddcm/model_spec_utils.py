@@ -1,24 +1,23 @@
 """Utilities. Gneral model spec utilities."""
 import functools
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import scipy
 
 from flexible_ddcm.shared import pandas_dot
 
 
 def map_transition_to_state_choice_entries(
-        initial,
-        choice,
-        arrival,
-        state_space,
-        get_between_states):
-    
+    initial, choice, arrival, state_space, get_between_states
+):
+
     position_stop = len(state_space.states)
     # Add n states attribute to state space.
     arrival_state = (
-        tuple(state_space.state_space.loc[arrival])[:position_stop] if arrival else arrival
+        tuple(state_space.state_space.loc[arrival])[:position_stop]
+        if arrival
+        else arrival
     )
     initial_state = tuple(state_space.state_space.loc[initial])[:position_stop]
 
@@ -27,26 +26,17 @@ def map_transition_to_state_choice_entries(
         return [state_space.state_choice_space_indexer[(*initial_state, choice)]]
     else:
 
-        state_tuples = get_between_states(initial_state, arrival_state, choice) 
-    return [
-            state_space.state_choice_space_indexer[tuple_] for tuple_ in state_tuples
-        ]
+        state_tuples = get_between_states(initial_state, arrival_state, choice)
+    return [state_space.state_choice_space_indexer[tuple_] for tuple_ in state_tuples]
 
-def between_states_age_variable(
-        initial_state,
-        arrival_state,
-        choice):
+
+def between_states_age_variable(initial_state, arrival_state, choice):
     age_initial = initial_state[0]
     age_arrival = arrival_state[0]
-    return [(x, *initial_state[1:], choice) \
-            for x in range(age_initial, age_arrival)]
+    return [(x, *initial_state[1:], choice) for x in range(age_initial, age_arrival)]
 
 
-def reward_function(
-        state_choice_space,
-        params,
-        choice_reward_functions
-        ):
+def reward_function(state_choice_space, params, choice_reward_functions):
     """Map state choice to reward."""
     grouper = state_choice_space.groupby(["choice"]).groups
     list_dfs = [
@@ -57,11 +47,8 @@ def reward_function(
 
 
 def transition_function(
-        states,
-        choice,
-        params,
-        variable_state,
-        choice_transition_functions):
+    states, choice, params, variable_state, choice_transition_functions
+):
     """
     Maps an old state into a probability distribution of new states.
         Input:
@@ -74,13 +61,18 @@ def transition_function(
     """
     function_ = choice_transition_functions[choice]
     kwargs = {
-        "states":states,
-        "choice":choice,
-        "params":params,
-        "variable_state":variable_state}
+        "states": states,
+        "choice": choice,
+        "params": params,
+        "variable_state": variable_state,
+    }
     return function_(
-        **{key:value for key, value \
-           in kwargs.items() if key in function_.__code__.co_varnames})
+        **{
+            key: value
+            for key, value in kwargs.items()
+            if key in function_.__code__.co_varnames
+        }
+    )
 
 
 def work_transition(states):
@@ -89,8 +81,7 @@ def work_transition(states):
     return out
 
 
-def nonstandard_academic_risk(
-        states, params, choice, variable_state):
+def nonstandard_academic_risk(states, params, choice, variable_state):
     age, initial_schooling, _ = variable_state
     dropout = _probit(params.loc[f"transition_risk_{choice}", "value"], states).reshape(
         states.shape[0], 1
@@ -104,9 +95,8 @@ def nonstandard_academic_risk(
     )
 
     dropout_length = _assign_probabilities(
-        params.loc[f"transition_length_dropout_{choice}", "value"],
-        states
-        )
+        params.loc[f"transition_length_dropout_{choice}", "value"], states
+    )
 
     out = pd.DataFrame(index=states.index)
     out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
@@ -161,9 +151,9 @@ def poisson_length(states, params, choice, variable_state):
 def _probit(params, states):
     return scipy.special.softmax(pandas_dot(states, params))
 
+
 def _assign_probabilities(params, states):
-    out = pd.DataFrame(
-        index=states.index, columns=params.index)
+    out = pd.DataFrame(index=states.index, columns=params.index)
     for col in out.columns:
         out[col] = params.loc[col]
     out.columns = [int(x) for x in out.columns]
@@ -215,4 +205,3 @@ def lifetime_wages(state_choice_space, params, wage_key, nonpec_key, discount_ke
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
     out.name = "value"
     return pd.DataFrame(out)
-

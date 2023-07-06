@@ -34,5 +34,3 @@ dependencies:
   - pytest-cov
   - scikit-learn
   - tox-conda
-
-

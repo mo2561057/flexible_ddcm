@@ -1,15 +1,14 @@
 import functools
 
+from flexible_ddcm.model_spec_utils import between_states_age_variable
+from flexible_ddcm.model_spec_utils import lifetime_wages
+from flexible_ddcm.model_spec_utils import map_transition_to_state_choice_entries
+from flexible_ddcm.model_spec_utils import nonpecuniary_reward
 from flexible_ddcm.model_spec_utils import nonstandard_academic_risk
 from flexible_ddcm.model_spec_utils import poisson_length
-from flexible_ddcm.model_spec_utils import work_transition
-from flexible_ddcm.model_spec_utils import nonpecuniary_reward
-from flexible_ddcm.model_spec_utils import lifetime_wages
-from flexible_ddcm.model_spec_utils import transition_function
 from flexible_ddcm.model_spec_utils import reward_function
-from flexible_ddcm.model_spec_utils import map_transition_to_state_choice_entries
-from flexible_ddcm.model_spec_utils import between_states_age_variable
-
+from flexible_ddcm.model_spec_utils import transition_function
+from flexible_ddcm.model_spec_utils import work_transition
 
 
 choice_transition_functions_nonstandard = {
@@ -43,14 +42,14 @@ choice_reward_functions_nonstandard = {
 
 transition_function_nonstandard = functools.partial(
     transition_function,
-    choice_transition_functions=choice_transition_functions_nonstandard
-    )
+    choice_transition_functions=choice_transition_functions_nonstandard,
+)
 
 reward_function_nonstandard = functools.partial(
-    reward_function,
-    choice_reward_functions=choice_reward_functions_nonstandard
-    )
+    reward_function, choice_reward_functions=choice_reward_functions_nonstandard
+)
 
 map_transition_to_state_choice_entries_nonstandard = functools.partial(
     map_transition_to_state_choice_entries,
-    get_between_states=between_states_age_variable)
+    get_between_states=between_states_age_variable,
+)

@@ -67,3 +67,5 @@ transition_min,mbo4,3
 transition_min,havo,2
 transition_min,mbo3,2
 ev_shocks,scale,1
+wage_shock_academic,std,0.1
+wage_shock_vocational,std,0.1

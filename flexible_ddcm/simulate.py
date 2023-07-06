@@ -13,7 +13,7 @@ def get_simulate_func(
     transition_function,
     reward_function,
     external_probabilities,
-    map_transition_to_state_choice_entries
+    map_transition_to_state_choice_entries,
 ):
     state_space = create_state_space(model_options)
     return functools.partial(
@@ -23,8 +23,7 @@ def get_simulate_func(
         transition_function=transition_function,
         reward_function=reward_function,
         external_probabilities=external_probabilities,
-        map_transition_to_state_choice_entries=\
-            map_transition_to_state_choice_entries
+        map_transition_to_state_choice_entries=map_transition_to_state_choice_entries,
     )
 
 
@@ -35,7 +34,7 @@ def simulate(
     transition_function,
     reward_function,
     external_probabilities,
-    map_transition_to_state_choice_entries
+    map_transition_to_state_choice_entries,
 ):
 
     _, choice_specific_value_functions, transitions = solve(
@@ -43,7 +42,8 @@ def simulate(
         model_options,
         transition_function,
         reward_function,
-        map_transition_to_state_choice_entries)
+        map_transition_to_state_choice_entries,
+    )
 
     simulation_df = _create_simulation_df(
         model_options, state_space, external_probabilities
@@ -122,6 +122,8 @@ def _create_simulation_df(model_options, state_space, external_probabilities):
     out[states_external] = external_probabilities.loc[
         locs_external, states_external
     ].values
+
+    # Add estimated probabilities
 
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(out, state_space, model_options)
