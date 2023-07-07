@@ -30,15 +30,14 @@ choice_reward_functions_nonstandard = {
         nonpec_key="nonpec_vocational",
         wage_key="wage_vocational",
         discount_key=("discount", "discount"),
-        shock_std_key=("wage_shock_vocational","std")
-        
+        shock_std_key=("wage_shock_vocational", "std"),
     ),
     "academic_work": functools.partial(
         lifetime_wages,
         nonpec_key="nonpec_academic",
         wage_key="wage_academic",
         discount_key=("discount", "discount"),
-        shock_std_key=("wage_shock_academic","std")
+        shock_std_key=("wage_shock_academic", "std"),
     ),
 }
 

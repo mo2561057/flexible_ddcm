@@ -90,8 +90,8 @@ def nonstandard_academic_risk(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"]),
-        int(params.loc[("transition_min", choice), "value"]),
+        int(params.loc[("transition_max", choice), "value"].iloc[0]),
+        int(params.loc[("transition_min", choice), "value"].iloc[0]),
     )
 
     dropout_length = _assign_probabilities(
@@ -115,15 +115,15 @@ def combined_logit_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"]),
-        int(params.loc[("transition_min", choice), "value"]),
+        int(params.loc[("transition_max", choice), "value"].iloc[0]),
+        int(params.loc[("transition_min", choice), "value"].iloc[0]),
     )
 
     dropout_length = _poisson_length(
         params.loc[f"transition_length_dropout_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", f"{choice}_dropout"), "value"]),
-        int(params.loc[("transition_min", f"{choice}_dropout"), "value"]),
+        int(params.loc[("transition_max", f"{choice}_dropout"), "value"].iloc[0]),
+        int(params.loc[("transition_min", f"{choice}_dropout"), "value"].iloc[0]),
     )
     out = pd.DataFrame(index=states.index)
     out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
@@ -139,8 +139,8 @@ def poisson_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"]),
-        int(params.loc[("transition_min", choice), "value"]),
+        int(params.loc[("transition_max", choice), "value"].iloc[0]),
+        int(params.loc[("transition_min", choice), "value"].iloc[0]),
     )
 
     out = pd.DataFrame(index=states.index)
@@ -180,17 +180,13 @@ def work_reward(state_choice_df, subset, input_params):
 
 
 def lifetime_wages(
-        state_choice_space,
-        params,
-        wage_key,
-        nonpec_key,
-        discount_key,
-        shock_std_key):
+    state_choice_space, params, wage_key, nonpec_key, discount_key, shock_std_key
+):
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key, "value"]
     nonpec_params = params.loc[nonpec_key, "value"]
-    discount = float(params.loc[discount_key, "value"])
-    std = float(params.loc[shock_std_key, "value"])
+    discount = float(params.loc[discount_key, "value"].iloc[0])
+    std = float(params.loc[shock_std_key, "value"].iloc[0])
     age_auxiliary = range(15, 55)
 
     # Calculate relevant values:
@@ -205,13 +201,14 @@ def lifetime_wages(
         work_utility = pandas_dot(im, nonpec_params)
         final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
         final_wage_dict[age].loc[work_utility.index] = (
-            np.exp(log_wage + (std)**2/2) + work_utility
+            np.exp(log_wage + (std) ** 2 / 2) + work_utility
         ) * (im.exp.map(lambda x: discount**x))
 
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
     out.name = "value"
     return pd.DataFrame(out)
+
 
 def _expected_log_utility(log_wage, std):
     pass

@@ -28,7 +28,13 @@ def create_state_space(model_options):
     # Can also keep as a dict of arrays?
     fixed_states_group = state_space.groupby(fixed_states)
     variable_states_group = state_space.groupby(
-        [col for col in state_space if ((col not in fixed_states)&(col in model_options["state_space"].keys()))]
+        [
+            col
+            for col in state_space
+            if (
+                (col not in fixed_states) & (col in model_options["state_space"].keys())
+            )
+        ]
     )
 
     state_space["variable_key"] = variable_states_group.ngroup()
