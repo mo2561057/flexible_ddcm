@@ -185,11 +185,11 @@ def _map_continuation_to_transition(
 def get_expected_value_ev_shocks(
     choice_specific_values,
     scale_parameter,
-):
+):  
+    
     return pd.Series(
-        data=scale_parameter
-        * scipy.special.logsumexp(
-            choice_specific_values.astype(float) / scale_parameter, axis=1
+        data=scale_parameter.iloc[0] * scipy.special.logsumexp(
+            choice_specific_values.astype(float) / scale_parameter.iloc[0], axis=1
         ),
         index=choice_specific_values.index,
     )

@@ -179,11 +179,18 @@ def work_reward(state_choice_df, subset, input_params):
     return pandas_dot(state_choice_df, params)
 
 
-def lifetime_wages(state_choice_space, params, wage_key, nonpec_key, discount_key):
+def lifetime_wages(
+        state_choice_space,
+        params,
+        wage_key,
+        nonpec_key,
+        discount_key,
+        shock_std_key):
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key, "value"]
     nonpec_params = params.loc[nonpec_key, "value"]
     discount = float(params.loc[discount_key, "value"])
+    std = float(params.loc[shock_std_key, "value"])
     age_auxiliary = range(15, 55)
 
     # Calculate relevant values:
@@ -198,10 +205,13 @@ def lifetime_wages(state_choice_space, params, wage_key, nonpec_key, discount_ke
         work_utility = pandas_dot(im, nonpec_params)
         final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
         final_wage_dict[age].loc[work_utility.index] = (
-            np.exp(log_wage) + work_utility
+            np.exp(log_wage + (std)**2/2) + work_utility
         ) * (im.exp.map(lambda x: discount**x))
 
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
     out.name = "value"
     return pd.DataFrame(out)
+
+def _expected_log_utility(log_wage, std):
+    pass

@@ -28,7 +28,7 @@ def create_state_space(model_options):
     # Can also keep as a dict of arrays?
     fixed_states_group = state_space.groupby(fixed_states)
     variable_states_group = state_space.groupby(
-        [col for col in state_space if col not in fixed_states]
+        [col for col in state_space if ((col not in fixed_states)&(col in model_options["state_space"].keys()))]
     )
 
     state_space["variable_key"] = variable_states_group.ngroup()
@@ -145,8 +145,6 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
         loc: state_space.loc[loc, "fixed_key"] for loc in state_space.index
     }
 
-    # This is majorly inefficient for now.
-    # Can however be fixed once it becomes an issue.
     state_and_next_variable_key_to_next_state = {
         (state, variable_key): variable_and_fixed_key_to_state[
             (variable_key, state_to_fixed_key[state])
