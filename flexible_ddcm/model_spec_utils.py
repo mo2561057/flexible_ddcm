@@ -66,12 +66,14 @@ def transition_function(
         "params": params,
         "variable_state": variable_state,
     }
+    arg_names = (
+        function_.func.__code__.co_varnames
+        if type(function_) == functools.partial
+        else function_.__code__.co_varnames
+    )
+
     return function_(
-        **{
-            key: value
-            for key, value in kwargs.items()
-            if key in function_.__code__.co_varnames
-        }
+        **{key: value for key, value in kwargs.items() if key in arg_names}
     )
 
 
@@ -81,21 +83,21 @@ def work_transition(states):
     return out
 
 
-def nonstandard_academic_risk(states, params, choice, variable_state):
+def nonstandard_academic_risk(states, params, choice, variable_state, suffix=""):
     age, initial_schooling, _ = variable_state
-    dropout = _probit(params.loc[f"transition_risk_{choice}", "value"], states).reshape(
-        states.shape[0], 1
-    )
+    dropout = _probit(
+        params.loc[f"transition_risk_{choice}{suffix}", "value"], states
+    ).reshape(states.shape[0], 1)
 
     length = _poisson_length(
-        params.loc[f"transition_length_{choice}", "value"],
+        params.loc[f"transition_length_{choice}{suffix}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"].iloc[0]),
-        int(params.loc[("transition_min", choice), "value"].iloc[0]),
+        int(params.loc[("transition_max", choice), "value"]),
+        int(params.loc[("transition_min", choice), "value"]),
     )
 
     dropout_length = _assign_probabilities(
-        params.loc[f"transition_length_dropout_{choice}", "value"], states
+        params.loc[f"transition_length_dropout_{choice}{suffix}", "value"], states
     )
 
     out = pd.DataFrame(index=states.index)
@@ -103,6 +105,19 @@ def nonstandard_academic_risk(states, params, choice, variable_state):
     out[[(col + age, initial_schooling, choice) for col in dropout_length]] = (
         dropout_length * (1 - dropout)
     ).values
+    return out
+
+
+def fixed_length_nonstandard(
+    states, params, choice, variable_state, length, length_dropout, suffix=""
+):
+    age, initial_schooling, _ = variable_state
+    dropout = _probit(
+        params.loc[f"transition_risk_{choice}{suffix}", "value"], states
+    ).reshape(states.shape[0], 1)
+    out = pd.DataFrame(index=states.index)
+    out[(age + length, choice, choice)] = dropout
+    out[(age + length_dropout, initial_schooling, choice)] = 1 - dropout
     return out
 
 
@@ -115,15 +130,15 @@ def combined_logit_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"].iloc[0]),
-        int(params.loc[("transition_min", choice), "value"].iloc[0]),
+        int(params.loc[("transition_max", choice), "value"]),
+        int(params.loc[("transition_min", choice), "value"]),
     )
 
     dropout_length = _poisson_length(
         params.loc[f"transition_length_dropout_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", f"{choice}_dropout"), "value"].iloc[0]),
-        int(params.loc[("transition_min", f"{choice}_dropout"), "value"].iloc[0]),
+        int(params.loc[("transition_max", f"{choice}_dropout"), "value"]),
+        int(params.loc[("transition_min", f"{choice}_dropout"), "value"]),
     )
     out = pd.DataFrame(index=states.index)
     out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
@@ -139,8 +154,8 @@ def poisson_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"].iloc[0]),
-        int(params.loc[("transition_min", choice), "value"].iloc[0]),
+        int(params.loc[("transition_max", choice), "value"]),
+        int(params.loc[("transition_min", choice), "value"]),
     )
 
     out = pd.DataFrame(index=states.index)

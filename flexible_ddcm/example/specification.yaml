@@ -43,14 +43,6 @@ state_space:
       - 1
       - 2
       - 3
-  unobserved_ability:
-    type: list
-    start: random
-    fixed: True
-    list:
-      - 0
-      - 1
-      - 2
 
 
 choices:
