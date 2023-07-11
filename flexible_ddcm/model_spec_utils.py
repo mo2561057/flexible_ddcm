@@ -85,9 +85,7 @@ def work_transition(states):
 
 def nonstandard_academic_risk(states, params, choice, variable_state, suffix=""):
     age, initial_schooling, _ = variable_state
-    dropout = _probit(
-        params.loc[f"transition_risk_{choice}{suffix}", "value"], states
-    ).reshape(states.shape[0], 1)
+    dropout = _logit(params.loc[f"transition_risk_{choice}{suffix}", "value"], states)
 
     length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}", "value"],
@@ -101,10 +99,12 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     )
 
     out = pd.DataFrame(index=states.index)
-    out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
-    out[[(col + age, initial_schooling, choice) for col in dropout_length]] = (
-        dropout_length * (1 - dropout)
-    ).values
+    out[[(col + age, choice, choice) for col in length]] = np.einsum(
+        "ij,i->ij", length, dropout
+    )
+    out[[(col + age, initial_schooling, choice) for col in dropout_length]] = np.einsum(
+        "ij,i->ij", dropout_length, (1 - dropout)
+    )
     return out
 
 
@@ -112,9 +112,7 @@ def fixed_length_nonstandard(
     states, params, choice, variable_state, length, length_dropout, suffix=""
 ):
     age, initial_schooling, _ = variable_state
-    dropout = _probit(
-        params.loc[f"transition_risk_{choice}{suffix}", "value"], states
-    ).reshape(states.shape[0], 1)
+    dropout = _logit(params.loc[f"transition_risk_{choice}{suffix}", "value"], states)
     out = pd.DataFrame(index=states.index)
     out[(age + length, choice, choice)] = dropout
     out[(age + length_dropout, initial_schooling, choice)] = 1 - dropout
@@ -123,9 +121,7 @@ def fixed_length_nonstandard(
 
 def combined_logit_length(states, params, choice, variable_state):
     age, initial_schooling, _ = variable_state
-    dropout = _probit(params.loc[f"transition_risk_{choice}", "value"], states).reshape(
-        states.shape[0], 1
-    )
+    dropout = _logit(params.loc[f"transition_risk_{choice}", "value"], states)
 
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
@@ -163,8 +159,9 @@ def poisson_length(states, params, choice, variable_state):
     return out
 
 
-def _probit(params, states):
-    return scipy.special.softmax(pandas_dot(states, params))
+def _logit(params, states):
+    exp = np.exp(pandas_dot(states, params))
+    return exp / (1 + exp)
 
 
 def _assign_probabilities(params, states):
