@@ -92,8 +92,8 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"]),
-        int(params.loc[("transition_min", choice), "value"]),
+        int(params.loc[("transition_max", choice), "value"].iloc[0]),
+        int(params.loc[("transition_min", choice), "value"].iloc[0]),
     )
 
     dropout_length = _assign_probabilities(
@@ -130,15 +130,15 @@ def combined_logit_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"]),
-        int(params.loc[("transition_min", choice), "value"]),
+        int(params.loc[("transition_max", choice), "value"].iloc[0]),
+        int(params.loc[("transition_min", choice), "value"].iloc[0]),
     )
 
     dropout_length = _poisson_length(
         params.loc[f"transition_length_dropout_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", f"{choice}_dropout"), "value"]),
-        int(params.loc[("transition_min", f"{choice}_dropout"), "value"]),
+        int(params.loc[("transition_max", f"{choice}_dropout"), "value"].iloc[0]),
+        int(params.loc[("transition_min", f"{choice}_dropout"), "value"].iloc[0]),
     )
     out = pd.DataFrame(index=states.index)
     out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
@@ -154,8 +154,8 @@ def poisson_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"]),
-        int(params.loc[("transition_min", choice), "value"]),
+        int(params.loc[("transition_max", choice), "value"].iloc[0]),
+        int(params.loc[("transition_min", choice), "value"].iloc[0]),
     )
 
     out = pd.DataFrame(index=states.index)
@@ -216,8 +216,10 @@ def lifetime_wages(
         work_utility = pandas_dot(im, nonpec_params)
         final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
         final_wage_dict[age].loc[work_utility.index] = (
-            np.exp(log_wage + (std) ** 2 / 2) + work_utility
-        ) * (im.exp.map(lambda x: discount**x))
+            (np.exp(log_wage + (std) ** 2 / 2) + work_utility)
+            * (im.exp.map(lambda x: discount**x))
+            * (1500)
+        )
 
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
