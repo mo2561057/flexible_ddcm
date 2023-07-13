@@ -99,6 +99,7 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     )
 
     out = pd.DataFrame(index=states.index)
+        
     out[[(col + age, choice, choice) for col in length]] = np.einsum(
         "ij,i->ij", length, dropout
     )
@@ -173,6 +174,8 @@ def _assign_probabilities(params, states):
 
 
 def _poisson_length(params, states, max, min):
+    locs = pandas_dot(states, params)
+    locs[locs<0] = 0
     length = scipy.stats.poisson(pandas_dot(states, params), min).pmf
     out = {value: length(value) for value in range(int(min), int(max) + 1)}
     norm = sum(list(out.values()))

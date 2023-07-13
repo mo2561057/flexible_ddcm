@@ -43,6 +43,14 @@ state_space:
       - 1
       - 2
       - 3
+#  unobserved_ability:
+#    type: list
+#    start: random
+#    fixed: True
+#    list:
+#      - 0
+#      - 1
+#      - 2
 
 
 choices:
@@ -90,12 +98,18 @@ choices:
     academic_work:
       - (schooling=='hbo')
       
-
 covariates:
   terminal: age==31
   constant: 1
+  grade_1: ability == 1
+  grade_2: ability == 2
+  grade_3: ability == 3
+  parental_income_1: parental_income == 1
+  parental_income_2: parental_income == 2
+  parental_income_3: parental_income == 3
   uni_dropout: schooling!='hbo' & lagged_choice == 'hbo'
-  
+  lagged_choice_mbo3: lagged_choice == 'mbo3' 
+
 state_space_filter:
   - age==15 & lagged_choice!='vmbo'
   - age==15 & schooling!='vmbo'
@@ -109,4 +123,4 @@ state_space_filter:
   - schooling=='mbo3' & lagged_choice=='havo'
   - schooling=='mbo3' & lagged_choice=='hbo'
   - schooling=='vmbo' & lagged_choice=='hbo'
-n_simulation_agents: 10000
+n_simulation_agents: 20000

@@ -54,3 +54,47 @@ def test_continuation_values_transition():
     assert np.isclose(
         continuation_predicted_weighted, choice_value_funcs[7].loc[0, "havo"]
     )
+
+
+
+def test_continuation_values_wages():
+    params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
+        ["category", "name"]
+    )
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/tests/resources/specification.yaml")
+    )
+    state_space = create_state_space(model_options)
+
+    continuation, choice_value_funcs, transitions = solve(
+        params,
+        model_options,
+        transition_function_nonstandard,
+        reward_function_nonstandard,
+        map_transition_to_state_choice_entries_nonstandard,
+    )
+
+    choice_value_funcs[7].loc[0, "havo"]
+
+    # Manually calculate
+    transition_check = transitions[("havo", 0)]
+
+    # Get raw continuation:
+    next_keys = {
+        col: state_space.state_and_next_variable_key_to_next_state[(0, col)]
+        for col in transition_check.columns
+    }
+    cont_predicted = {
+        col: continuation.loc[value]
+        * params.loc[("discount", "discount"), "value"]
+        ** (state_space.state_space.loc[value, "age"] - 16)
+        for col, value in next_keys.items()
+    }
+
+    continuation_predicted_weighted = sum(
+        cont_predicted[col] * transition_check.loc[0, col] for col in cont_predicted
+    ).iloc[0]
+
+    assert np.isclose(
+        continuation_predicted_weighted, choice_value_funcs[7].loc[0, "havo"]
+    )

@@ -10,14 +10,24 @@ from flexible_ddcm.example.input_functions import (
 from flexible_ddcm.example.input_functions import reward_function_nonstandard
 from flexible_ddcm.example.input_functions import transition_function_nonstandard
 from flexible_ddcm.simulate import get_simulate_func
+from flexible_ddcm.solve import solve
+
 from flexible_ddcm.state_space import create_state_space
 
-params = pd.read_csv("flexible_ddcm/example/params.csv").set_index(["category", "name"])
+params = pd.read_csv("flexible_ddcm/example/params.csv").set_index(["category", "name"])[["value"]]
 model_options = yaml.safe_load(open("flexible_ddcm/example/specification.yaml"))
 external_probabilities = pd.read_csv(
     "flexible_ddcm/example/external_probabilities.csv"
 ).drop(columns=["Unnamed: 0"])
+#sp = create_state_space(model_options)
 
+cont = solve(
+    params,
+    model_options,
+    transition_function_nonstandard,
+    reward_function_nonstandard,
+    map_transition_to_state_choice_entries_nonstandard,
+)
 
 simulate = get_simulate_func(
     model_options,
