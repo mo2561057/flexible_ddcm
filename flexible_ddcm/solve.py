@@ -20,9 +20,9 @@ def solve(
 ):
     # Need to put into options.
     segmentation_column = "age"
-    #breakpoint()
+    # breakpoint()
     state_space = create_state_space(model_options)
-    #breakpoint()
+    # breakpoint()
     transitions = build_transition_func_from_params(
         params, state_space, transition_function
     )
@@ -36,8 +36,7 @@ def solve(
 
     # Initiate Continuation values
     continuation_values = pd.DataFrame(
-        index=state_space.state_space.index,
-        columns=["continuation_value"]
+        index=state_space.state_space.index, columns=["continuation_value"]
     )
 
     # Initiate array to keep all entries from
@@ -158,8 +157,6 @@ def _map_continuation_to_transition(
     map_transition_to_state_choice_entries,
 ):
     """Rewards are potentially stochastic."""
-    if choice=="hbo":
-        breakpoint()
     arrival = (
         None
         if variable_key == "terminal"
