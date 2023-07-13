@@ -36,7 +36,7 @@ def simulate(
     external_probabilities,
     map_transition_to_state_choice_entries,
 ):
-
+    params = params[["value"]]
     _, choice_specific_value_functions, transitions = solve(
         params,
         model_options,
