@@ -94,7 +94,6 @@ choices:
       - (schooling=='mbo4')
       - (schooling=='mbo3')
       - (schooling=='havo')
-      - (schooling=='vmbo')&(lagged_choice!='vmbo')
     academic_work:
       - (schooling=='hbo')
       

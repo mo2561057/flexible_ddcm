@@ -31,6 +31,8 @@ def solve(
         state_space.state_choice_space, params, reward_function
     )[["value"]]
 
+
+
     # Segment state space into chunks that we iterate over.
     state_grouper = state_space.state_space.groupby(segmentation_column).groups
 
@@ -77,10 +79,11 @@ def solve(
 
             else:
                 continuation_values.loc[locs_variable, "continuation_value"] = np.nan
-
+    
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
+    
 
     return continuation_values, choice_specific_value_function, transitions
 
@@ -106,14 +109,14 @@ def get_choice_specific_values(
             transition,
             choice,
             rewards,
-            params.loc[("discount", "discount"),"value"].iloc[0],
+            params.loc[("discount", "discount")].iloc[0],
             continuation_values,
             state_space,
             map_transition_to_state_choice_entries,
         ).sum(axis=1)
 
     return out, get_expected_value_ev_shocks(
-        out, params.loc[("ev_shocks", "scale"),"value"].iloc[0]
+        out, params.loc[("ev_shocks", "scale")].iloc[0]
     )
 
 
@@ -157,6 +160,7 @@ def _map_continuation_to_transition(
     map_transition_to_state_choice_entries,
 ):
     """Rewards are potentially stochastic."""
+
     arrival = (
         None
         if variable_key == "terminal"

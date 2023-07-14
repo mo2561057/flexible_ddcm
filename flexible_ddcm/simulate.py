@@ -36,7 +36,6 @@ def simulate(
     external_probabilities,
     map_transition_to_state_choice_entries,
 ):
-    params = params[["value"]].copy()
     _, choice_specific_value_functions, transitions = solve(
         params,
         model_options,
@@ -156,7 +155,7 @@ def create_taste_shocks(choice_value_func, params):
     )
     shocks[:] = np.random.gumbel(
         0,
-        params.loc[("ev_shocks", "scale"), "value"],
+        params.loc[("ev_shocks", "scale")],
         size=shocks.shape[0] * shocks.shape[1],
     ).reshape(shocks.shape)
     return shocks
