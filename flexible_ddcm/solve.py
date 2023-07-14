@@ -106,14 +106,14 @@ def get_choice_specific_values(
             transition,
             choice,
             rewards,
-            params.loc[("discount", "discount")].iloc[0],
+            params.loc[("discount", "discount"),"value"].iloc[0],
             continuation_values,
             state_space,
             map_transition_to_state_choice_entries,
         ).sum(axis=1)
 
     return out, get_expected_value_ev_shocks(
-        out, params.loc[("ev_shocks", "scale")].iloc[0]
+        out, params.loc[("ev_shocks", "scale"),"value"].iloc[0]
     )
 
 
@@ -188,9 +188,9 @@ def get_expected_value_ev_shocks(
 ):
 
     return pd.Series(
-        data=scale_parameter.iloc[0]
+        data=scale_parameter
         * scipy.special.logsumexp(
-            choice_specific_values.astype(float) / scale_parameter.iloc[0], axis=1
+            choice_specific_values.astype(float) / scale_parameter, axis=1
         ),
         index=choice_specific_values.index,
     )

@@ -90,8 +90,8 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"].iloc[0]),
-        int(params.loc[("transition_min", choice), "value"].iloc[0]),
+        params.loc[("transition_max", choice), "value"].iloc[0],
+        params.loc[("transition_min", choice), "value"].iloc[0],
     )
 
     dropout_length = _assign_probabilities(
@@ -120,39 +120,14 @@ def fixed_length_nonstandard(
     return out
 
 
-def combined_logit_length(states, params, choice, variable_state):
-    age, initial_schooling, _ = variable_state
-    dropout = _logit(params.loc[f"transition_risk_{choice}", "value"], states)
-
-    length = _poisson_length(
-        params.loc[f"transition_length_{choice}", "value"],
-        states,
-        int(params.loc[("transition_max", choice), "value"].iloc[0]),
-        int(params.loc[("transition_min", choice), "value"].iloc[0]),
-    )
-
-    dropout_length = _poisson_length(
-        params.loc[f"transition_length_dropout_{choice}", "value"],
-        states,
-        int(params.loc[("transition_max", f"{choice}_dropout"), "value"].iloc[0]),
-        int(params.loc[("transition_min", f"{choice}_dropout"), "value"].iloc[0]),
-    )
-    out = pd.DataFrame(index=states.index)
-    out[[(col + age, choice, choice) for col in length]] = (length * dropout).values
-    out[[(col + age, initial_schooling, choice) for col in dropout_length]] = (
-        dropout_length * (1 - dropout)
-    ).values
-    return out
-
-
 def poisson_length(states, params, choice, variable_state):
     age, _, _ = variable_state
 
     length = _poisson_length(
         params.loc[f"transition_length_{choice}", "value"],
         states,
-        int(params.loc[("transition_max", choice), "value"].iloc[0]),
-        int(params.loc[("transition_min", choice), "value"].iloc[0]),
+        params.loc[("transition_max", choice), "value"].iloc[0],
+        params.loc[("transition_min", choice), "value"].iloc[0],
     )
 
     out = pd.DataFrame(index=states.index)
@@ -200,9 +175,9 @@ def lifetime_wages(
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key, "value"]
     nonpec_params = params.loc[nonpec_key, "value"]
-    discount = float(params.loc[discount_key, "value"].iloc[0])
-    std = float(params.loc[shock_std_key, "value"].iloc[0])
-    age_auxiliary = range(15, 55)
+    discount = params.loc[discount_key, "value"].iloc[0]
+    std = params.loc[shock_std_key, "value"].iloc[0]
+    age_auxiliary = range(16, 55)
 
     # Calculate relevant values:
     final_wage_dict = {}
@@ -211,15 +186,16 @@ def lifetime_wages(
         im = im.rename(columns={"age": "age_start"})
         im["age"] = age
         im["exp"] = im["age"] - im["age_start"]
-        im = im[im.exp >= 0]
-        log_wage = pandas_dot(im, wage_params).astype(float)
-        work_utility = pandas_dot(im, nonpec_params)
+        im["exp**2"] = (im["exp"]**2)/100 
         final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
-        final_wage_dict[age].loc[work_utility.index] = (
-            (np.exp(log_wage + (std) ** 2 / 2) + work_utility)
-            * (im.exp.map(lambda x: discount**x))
-            * (1500)
-        )
+        if (im.exp >= 0).any():
+            im = im[im.exp >= 0]
+            log_wage = pandas_dot(im, wage_params).astype(float)
+            work_utility = pandas_dot(im, nonpec_params)
+            final_wage_dict[age].loc[work_utility.index] = (
+                (np.exp(log_wage + (std) ** 2 / 2)* (1500) + work_utility)
+                * (im.exp.map(lambda x: discount**x))
+            )
 
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
@@ -228,4 +204,7 @@ def lifetime_wages(
 
 
 def _expected_log_utility(log_wage, std):
+    pass
+
+def _get_scalar():
     pass
