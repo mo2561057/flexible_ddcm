@@ -5,9 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy
 
-from flexible_ddcm.shared import pandas_dot
 from flexible_ddcm.shared import get_scalar_from_pandas_object
-
+from flexible_ddcm.shared import pandas_dot
 
 
 def map_transition_to_state_choice_entries(
@@ -46,7 +45,7 @@ def reward_function(state_choice_space, params, choice_reward_functions):
         for choice, locs in grouper.items()
     ]
     out = pd.concat(list_dfs)
-    out.columns = ["value"] 
+    out.columns = ["value"]
     return out
 
 
@@ -94,14 +93,15 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}"],
         states,
-        get_scalar_from_pandas_object(params,("transition_max", choice)),
-        get_scalar_from_pandas_object(params,("transition_min", choice)),
+        get_scalar_from_pandas_object(params, ("transition_max", choice)),
+        get_scalar_from_pandas_object(params, ("transition_min", choice)),
     )
 
     dropout_length = _assign_probabilities(
-        params.loc[f"transition_length_dropout_{choice}{suffix}"], states)
+        params.loc[f"transition_length_dropout_{choice}{suffix}"], states
+    )
     out = pd.DataFrame(index=states.index)
-        
+
     out[[(col + age, choice, choice) for col in length]] = np.einsum(
         "ij,i->ij", length, dropout
     )
@@ -153,7 +153,7 @@ def _assign_probabilities(params, states):
 
 def _poisson_length(params, states, max, min):
     locs = pandas_dot(states, params)
-    locs[locs<0] = 0
+    locs[locs < 0] = 0
     length = scipy.stats.poisson(pandas_dot(states, params), min).pmf
     out = {value: length(value) for value in range(int(min), int(max) + 1)}
     norm = sum(list(out.values()))
@@ -179,8 +179,8 @@ def lifetime_wages(
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key]
     nonpec_params = params.loc[nonpec_key]
-    discount = get_scalar_from_pandas_object(params,discount_key)
-    std = get_scalar_from_pandas_object(params,shock_std_key)
+    discount = get_scalar_from_pandas_object(params, discount_key)
+    std = get_scalar_from_pandas_object(params, shock_std_key)
     age_auxiliary = range(16, 40)
 
     # Calculate relevant values:
@@ -188,18 +188,18 @@ def lifetime_wages(
     for age in age_auxiliary:
         im = state_choice_space.copy()
         im = im.rename(columns={"age": "age_start"})
+        im["age"] = age
         im["exp"] = im["age"] - im["age_start"]
-        im["exp**2"] = (im["exp"]**2)/100 
+        im["exp**2"] = (im["exp"] ** 2) / 100
         final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
         if (im.exp >= 0).any():
             im = im[im.exp >= 0]
             log_wage = pandas_dot(im, wage_params).astype(float)
-            log_wage[log_wage>50] = 50
+            log_wage[log_wage > 4] = 4
             work_utility = pandas_dot(im, nonpec_params)
             final_wage_dict[age].loc[work_utility.index] = (
-                (np.exp(log_wage + (std) ** 2 / 2)* (1500) + work_utility)
-                * (im.exp.map(lambda x: discount**x))
-            )
+                np.exp(log_wage + (std) ** 2 / 2) * (1500) + work_utility
+            ) * (im.exp.map(lambda x: discount**x))
 
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
@@ -208,6 +208,7 @@ def lifetime_wages(
 
 def _expected_log_utility(log_wage, std):
     pass
+
 
 def _get_scalar():
     pass
