@@ -9,7 +9,7 @@ import scipy
 from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
-
+from flexible_ddcm.shared import get_scalar_from_pandas_object
 
 def solve(
     params,
@@ -30,8 +30,6 @@ def solve(
     rewards = calculate_rewards_state_choice_space(
         state_space.state_choice_space, params, reward_function
     )[["value"]]
-
-
 
     # Segment state space into chunks that we iterate over.
     state_grouper = state_space.state_space.groupby(segmentation_column).groups
@@ -84,7 +82,6 @@ def solve(
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
     
-
     return continuation_values, choice_specific_value_function, transitions
 
 
@@ -109,14 +106,14 @@ def get_choice_specific_values(
             transition,
             choice,
             rewards,
-            params.loc[("discount", "discount")].iloc[0],
+            get_scalar_from_pandas_object(params,("discount", "discount")),
             continuation_values,
             state_space,
             map_transition_to_state_choice_entries,
         ).sum(axis=1)
 
     return out, get_expected_value_ev_shocks(
-        out, params.loc[("ev_shocks", "scale")].iloc[0]
+        out, get_scalar_from_pandas_object(params,("ev_shocks", "scale"))
     )
 
 

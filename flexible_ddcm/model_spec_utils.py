@@ -6,6 +6,8 @@ import pandas as pd
 import scipy
 
 from flexible_ddcm.shared import pandas_dot
+from flexible_ddcm.shared import get_scalar_from_pandas_object
+
 
 
 def map_transition_to_state_choice_entries(
@@ -92,18 +94,18 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}"],
         states,
-        params.loc[("transition_max", choice)].iloc[0],
-        params.loc[("transition_min", choice)].iloc[0],
+        get_scalar_from_pandas_object(params,("transition_max", choice)),
+        get_scalar_from_pandas_object(params,("transition_min", choice)),
     )
 
     dropout_length = _assign_probabilities(
-        params.loc[f"transition_length_dropout_{choice}{suffix}"], states
-    )
+        params.loc[f"transition_length_dropout_{choice}{suffix}"], states)
     out = pd.DataFrame(index=states.index)
         
     out[[(col + age, choice, choice) for col in length]] = np.einsum(
         "ij,i->ij", length, dropout
     )
+
     out[[(col + age, initial_schooling, choice) for col in dropout_length]] = np.einsum(
         "ij,i->ij", dropout_length, (1 - dropout)
     )
@@ -127,8 +129,8 @@ def poisson_length(states, params, choice, variable_state):
     length = _poisson_length(
         params.loc[f"transition_length_{choice}"],
         states,
-        params.loc[("transition_max", choice)].iloc[0],
-        params.loc[("transition_min", choice)].iloc[0],
+        params.loc[("transition_max", choice)],
+        params.loc[("transition_min", choice)],
     )
 
     out = pd.DataFrame(index=states.index)
@@ -177,8 +179,8 @@ def lifetime_wages(
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key]
     nonpec_params = params.loc[nonpec_key]
-    discount = params.loc[discount_key].iloc[0]
-    std = params.loc[shock_std_key].iloc[0]
+    discount = get_scalar_from_pandas_object(params,discount_key)
+    std = get_scalar_from_pandas_object(params,shock_std_key)
     age_auxiliary = range(16, 40)
 
     # Calculate relevant values:
@@ -186,13 +188,13 @@ def lifetime_wages(
     for age in age_auxiliary:
         im = state_choice_space.copy()
         im = im.rename(columns={"age": "age_start"})
-        im["age"] = age
         im["exp"] = im["age"] - im["age_start"]
         im["exp**2"] = (im["exp"]**2)/100 
         final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
         if (im.exp >= 0).any():
             im = im[im.exp >= 0]
             log_wage = pandas_dot(im, wage_params).astype(float)
+            log_wage[log_wage>50] = 50
             work_utility = pandas_dot(im, nonpec_params)
             final_wage_dict[age].loc[work_utility.index] = (
                 (np.exp(log_wage + (std) ** 2 / 2)* (1500) + work_utility)
