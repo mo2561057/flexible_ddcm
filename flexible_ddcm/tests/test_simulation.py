@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from flexible_ddcm.example.input_functions import (
+from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from flexible_ddcm.example.input_functions import reward_function_nonstandard
-from flexible_ddcm.example.input_functions import transition_function_nonstandard
+from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
 from flexible_ddcm.simulate import get_simulate_func
 from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
@@ -14,15 +14,15 @@ from flexible_ddcm.transitions import build_transition_func_from_params
 
 def test_transition_shocks():
     """Test transition probabilities."""
-    params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )
     model_options = yaml.safe_load(
-        open("flexible_ddcm/tests/resources/specification.yaml")
+        open("flexible_ddcm/example/base/specification.yaml")
     )
 
     external_probabilities = pd.read_csv(
-        "flexible_ddcm/tests/resources/external_probabilities.csv"
+        "flexible_ddcm/example/base/external_probabilities.csv"
     ).drop(columns=["Unnamed: 0"])
 
     state_space = create_state_space(model_options)
@@ -35,10 +35,10 @@ def test_transition_shocks():
         map_transition_to_state_choice_entries_nonstandard,
     )
 
-    simulate_dict = simulate(params)
+    simulate_dict = simulate(params["value"])
 
     transitions = build_transition_func_from_params(
-        params, state_space, transition_function_nonstandard
+        params["value"], state_space, transition_function_nonstandard
     )
 
     # Groupby initial key and chec next key.
@@ -66,15 +66,15 @@ def test_transition_shocks():
 
 
 def test_simulate_func():
-    params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )
     model_options = yaml.safe_load(
-        open("flexible_ddcm/tests/resources/specification.yaml")
+        open("flexible_ddcm/example/base/specification.yaml")
     )
 
     external_probabilities = pd.read_csv(
-        "flexible_ddcm/tests/resources/external_probabilities.csv"
+        "flexible_ddcm/example/base/external_probabilities.csv"
     ).drop(columns=["Unnamed: 0"])
 
     # Set particular returns

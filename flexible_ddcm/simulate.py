@@ -2,10 +2,12 @@ import functools
 
 import numpy as np
 import pandas as pd
+from scipy.special import softmax
 
 from flexible_ddcm.shared import build_covariates
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.shared import pandas_dot
 
 
 def get_simulate_func(
@@ -45,7 +47,7 @@ def simulate(
     )
 
     simulation_df = _create_simulation_df(
-        model_options, state_space, external_probabilities
+        model_options, state_space, external_probabilities, params
     )
 
     simulation_data = {0: simulation_df}
@@ -91,7 +93,7 @@ def simulate(
     return simulation_data
 
 
-def _create_simulation_df(model_options, state_space, external_probabilities):
+def _create_simulation_df(model_options, state_space, external_probabilities, params):
     """External states must contain joint
     probability per combination of unobservables."""
 
@@ -123,6 +125,9 @@ def _create_simulation_df(model_options, state_space, external_probabilities):
     ].values
 
     # Add estimated probabilities
+    for col, specs in model_options["state_space"].items():
+        if specs["start"]=="random_internal":
+            pass
 
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(out, state_space, model_options)
@@ -216,3 +221,30 @@ def _attach_information_to_simulated_df(df, state_space, model_options):
     ].values
     df["choice_key"] = state_space.state_space.loc[df.state_key, "choice_key"].values
     return build_covariates(df, model_options)
+
+
+def _sample_characteristics(df, params, name, values):
+    level_dict = {value: params.loc[f"observable_{name}_{value}"] for value in values}
+    z = ()
+    for coefs in level_dict.values():
+        x_beta = pandas_dot(df, coefs)
+        z += (x_beta,)
+    probabilities = softmax(np.column_stack(z), axis=1)
+    
+    choices = level_dict.keys()
+    characteristic = _random_choice(choices, probabilities)
+    return characteristic
+
+
+def _random_choice(choices, probabilities, decimals=5):
+    cumulative_distribution = probabilities.cumsum(axis=1)
+    # Probabilities often do not sum to one but 0.99999999999999999.
+    cumulative_distribution[:, -1] = np.round(
+        cumulative_distribution[:, -1], decimals)
+    u = np.random.rand(
+        cumulative_distribution.shape[0], 1)
+
+    # Note that :func:`np.argmax` returns the first index for multiple maximum values.
+    indices = (u < cumulative_distribution).argmax(axis=1)
+
+    return np.take(choices, indices)

@@ -84,7 +84,6 @@ def solve(
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
-
     return continuation_values, choice_specific_value_function, transitions
 
 

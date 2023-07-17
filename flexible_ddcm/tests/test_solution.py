@@ -9,21 +9,23 @@ from flexible_ddcm.example.input_functions import reward_function_nonstandard
 from flexible_ddcm.example.input_functions import transition_function_nonstandard
 from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 from flexible_ddcm.shared import pandas_dot
+from flexible_ddcm.shared import get_scalar_from_pandas_object
+
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
 
 
 def test_continuation_values_transition():
-    params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )
     model_options = yaml.safe_load(
-        open("flexible_ddcm/tests/resources/specification.yaml")
+        open("flexible_ddcm/example/base/specification.yaml")
     )
     state_space = create_state_space(model_options)
 
     continuation, choice_value_funcs, transitions = solve(
-        params,
+        params["value"],
         model_options,
         transition_function_nonstandard,
         reward_function_nonstandard,
@@ -42,7 +44,7 @@ def test_continuation_values_transition():
     }
     cont_predicted = {
         col: continuation.loc[value]
-        * params.loc[("discount", "discount"), "value"]
+        * get_scalar_from_pandas_object(params,("discount", "discount"))
         ** (state_space.state_space.loc[value, "age"] - 16)
         for col, value in next_keys.items()
     }
@@ -58,16 +60,16 @@ def test_continuation_values_transition():
 
 
 def test_continuation_values_wages():
-    params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )
     model_options = yaml.safe_load(
-        open("flexible_ddcm/tests/resources/specification.yaml")
+        open("flexible_ddcm/example/base/specification.yaml")
     )
     state_space = create_state_space(model_options)
 
     continuation, choice_value_funcs, transitions = solve(
-        params,
+        params["value"],
         model_options,
         transition_function_nonstandard,
         reward_function_nonstandard,
@@ -86,7 +88,7 @@ def test_continuation_values_wages():
     }
     cont_predicted = {
         col: continuation.loc[value]
-        * params.loc[("discount", "discount"), "value"]
+        * get_scalar_from_pandas_object(params["value"],("discount", "discount"))
         ** (state_space.state_space.loc[value, "age"] - 16)
         for col, value in next_keys.items()
     }
