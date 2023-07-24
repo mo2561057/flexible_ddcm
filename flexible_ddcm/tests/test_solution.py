@@ -7,10 +7,7 @@ from flexible_ddcm.example.input_functions import (
 )
 from flexible_ddcm.example.input_functions import reward_function_nonstandard
 from flexible_ddcm.example.input_functions import transition_function_nonstandard
-from flexible_ddcm.rewards import calculate_rewards_state_choice_space
-from flexible_ddcm.shared import pandas_dot
 from flexible_ddcm.shared import get_scalar_from_pandas_object
-
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
 
@@ -44,7 +41,7 @@ def test_continuation_values_transition():
     }
     cont_predicted = {
         col: continuation.loc[value]
-        * get_scalar_from_pandas_object(params,("discount", "discount"))
+        * get_scalar_from_pandas_object(params, ("discount", "discount"))
         ** (state_space.state_space.loc[value, "age"] - 16)
         for col, value in next_keys.items()
     }
@@ -56,7 +53,6 @@ def test_continuation_values_transition():
     assert np.isclose(
         continuation_predicted_weighted, choice_value_funcs[7].loc[0, "havo"]
     )
-
 
 
 def test_continuation_values_wages():
@@ -88,7 +84,7 @@ def test_continuation_values_wages():
     }
     cont_predicted = {
         col: continuation.loc[value]
-        * get_scalar_from_pandas_object(params["value"],("discount", "discount"))
+        * get_scalar_from_pandas_object(params["value"], ("discount", "discount"))
         ** (state_space.state_space.loc[value, "age"] - 16)
         for col, value in next_keys.items()
     }

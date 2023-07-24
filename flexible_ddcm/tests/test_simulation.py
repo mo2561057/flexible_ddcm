@@ -91,3 +91,30 @@ def test_simulate_func():
     simulate_dict = simulate(params)
 
     assert all(simulate_dict[0].choice == "mbo3")
+
+
+def test_simulate_func_types():
+    params = pd.read_csv("flexible_ddcm/example/types/params.csv").set_index(
+        ["category", "name"]
+    )
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/example/types/specification.yaml")
+    )
+
+    external_probabilities = pd.read_csv(
+        "flexible_ddcm/example/types/external_probabilities.csv"
+    ).drop(columns=["Unnamed: 0"])
+
+    # Set particular returns
+    params.loc[("nonpec_mbo3", "constant"), "value"] = 1e10
+
+    simulate = get_simulate_func(
+        model_options,
+        transition_function_nonstandard,
+        reward_function_nonstandard,
+        external_probabilities,
+        map_transition_to_state_choice_entries_nonstandard,
+    )
+
+    simulate_dict = simulate(params["value"])
+    assert all(simulate_dict[0].choice == "mbo3")

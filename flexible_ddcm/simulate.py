@@ -5,9 +5,9 @@ import pandas as pd
 from scipy.special import softmax
 
 from flexible_ddcm.shared import build_covariates
+from flexible_ddcm.shared import pandas_dot
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
-from flexible_ddcm.shared import pandas_dot
 
 
 def get_simulate_func(
@@ -126,12 +126,14 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
 
     # Add estimated probabilities
     for col, specs in model_options["state_space"].items():
-        if specs["start"]=="random_internal":
-            pass
+        if specs["start"] == "random_internal":
+            out[col] = _sample_characteristics(out, params, col, specs["list"])
 
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(out, state_space, model_options)
+    out = out.astype(model_options.get("dtypes", {}))
     out["choice"] = np.nan
+
     return out
 
 
@@ -205,6 +207,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
     next_df = pd.concat(
         [current_df.loc[arrival_states[arrival_states == "terminal"].index], next_df]
     )
+    next_df = next_df.astype(model_options.get("dtypes", {}))
     next_df = build_covariates(next_df, model_options)
 
     return next_df
@@ -224,13 +227,18 @@ def _attach_information_to_simulated_df(df, state_space, model_options):
 
 
 def _sample_characteristics(df, params, name, values):
-    level_dict = {value: params.loc[f"observable_{name}_{value}"] for value in values}
+    level_dict = {
+        value: params.loc[f"observable_{name}_{value}"] for value in values[1:]
+    }
+
+    # Coefs relative to first level
+    level_dict[values[0]] = pd.Series(data=[0], index=["constant"])
     z = ()
     for coefs in level_dict.values():
         x_beta = pandas_dot(df, coefs)
         z += (x_beta,)
     probabilities = softmax(np.column_stack(z), axis=1)
-    
+
     choices = level_dict.keys()
     characteristic = _random_choice(choices, probabilities)
     return characteristic
@@ -239,10 +247,8 @@ def _sample_characteristics(df, params, name, values):
 def _random_choice(choices, probabilities, decimals=5):
     cumulative_distribution = probabilities.cumsum(axis=1)
     # Probabilities often do not sum to one but 0.99999999999999999.
-    cumulative_distribution[:, -1] = np.round(
-        cumulative_distribution[:, -1], decimals)
-    u = np.random.rand(
-        cumulative_distribution.shape[0], 1)
+    cumulative_distribution[:, -1] = np.round(cumulative_distribution[:, -1], decimals)
+    u = np.random.rand(cumulative_distribution.shape[0], 1)
 
     # Note that :func:`np.argmax` returns the first index for multiple maximum values.
     indices = (u < cumulative_distribution).argmax(axis=1)

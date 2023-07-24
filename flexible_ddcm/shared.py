@@ -12,6 +12,9 @@ def build_covariates(df, model_options):
         df[col] = df.eval(definition)
         if df[col].dtype == bool:
             df[col] = df[col].astype(int)
+        # elif col in model_options["dtypes"]:
+        #    df[col] = df[col].astype(model_options["dtypes"][col])
+
     return df
 
 
