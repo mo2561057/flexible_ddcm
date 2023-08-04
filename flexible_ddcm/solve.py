@@ -32,8 +32,6 @@ def solve(
         state_space.state_choice_space, params, reward_function
     )[["value"]]
 
-    # breakpoint()
-
     # Segment state space into chunks that we iterate over.
     state_grouper = state_space.state_space.groupby(segmentation_column).groups
 

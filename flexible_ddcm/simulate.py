@@ -124,6 +124,8 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
         locs_external, states_external
     ].values
 
+    # Build covariates required for type creation:
+
     # Add estimated probabilities
     for col, specs in model_options["state_space"].items():
         if specs["start"] == "random_internal":
@@ -135,6 +137,12 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     out["choice"] = np.nan
 
     return out
+
+
+def _get_required_covariates_sampled_variables(params):
+    locs = params.index.map(lambda x: x[0].startswith("observable_"))
+    covariates = params[locs].index.get_level_values(1).unique()
+    return covariates
 
 
 def get_choices(
