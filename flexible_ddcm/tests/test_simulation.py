@@ -118,3 +118,6 @@ def test_simulate_func_types():
 
     simulate_dict = simulate(params["value"])
     assert all(simulate_dict[0].choice == "mbo3")
+
+def test_sample_characteristics():
+    pass

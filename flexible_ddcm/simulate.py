@@ -125,7 +125,10 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     ].values
 
     # Build covariates required for type creation:
-
+    covariates_type = _get_required_covariates_sampled_variables(
+        params, model_options)
+    
+    out = build_covariates(out, covariates_type)
     # Add estimated probabilities
     for col, specs in model_options["state_space"].items():
         if specs["start"] == "random_internal":
@@ -139,10 +142,13 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     return out
 
 
-def _get_required_covariates_sampled_variables(params):
+def _get_required_covariates_sampled_variables(params, model_options):
     locs = params.index.map(lambda x: x[0].startswith("observable_"))
     covariates = params[locs].index.get_level_values(1).unique()
-    return covariates
+    return {
+        key:value for key,value in model_options.get("covariates",{}).items()\
+              if key in covariates}
+    
 
 
 def get_choices(
@@ -216,7 +222,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
         [current_df.loc[arrival_states[arrival_states == "terminal"].index], next_df]
     )
     next_df = next_df.astype(model_options.get("dtypes", {}))
-    next_df = build_covariates(next_df, model_options)
+    next_df = build_covariates(next_df, model_options.get("covariates",{}))
 
     return next_df
 
@@ -226,19 +232,16 @@ def _attach_information_to_simulated_df(df, state_space, model_options):
     df["state_key"] = df[list(model_options["state_space"].keys())].apply(
         lambda x: state_space.state_space_indexer[tuple(x)], axis=1
     )
-
     df["variable_key"] = state_space.state_space.loc[
         df.state_key, "variable_key"
     ].values
     df["choice_key"] = state_space.state_space.loc[df.state_key, "choice_key"].values
-    return build_covariates(df, model_options)
-
+    return build_covariates(df, model_options.get("covariates",{}))
 
 def _sample_characteristics(df, params, name, values):
     level_dict = {
         value: params.loc[f"observable_{name}_{value}"] for value in values[1:]
     }
-
     # Coefs relative to first level
     level_dict[values[0]] = pd.Series(data=[0], index=["constant"])
     z = ()
@@ -247,7 +250,8 @@ def _sample_characteristics(df, params, name, values):
         z += (x_beta,)
     probabilities = softmax(np.column_stack(z), axis=1)
 
-    choices = level_dict.keys()
+    # Is this the c
+    choices = list(level_dict.keys())
     characteristic = _random_choice(choices, probabilities)
     return characteristic
 

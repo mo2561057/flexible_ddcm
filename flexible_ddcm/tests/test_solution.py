@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from flexible_ddcm.example.input_functions import (
+from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from flexible_ddcm.example.input_functions import reward_function_nonstandard
-from flexible_ddcm.example.input_functions import transition_function_nonstandard
+from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
 from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space

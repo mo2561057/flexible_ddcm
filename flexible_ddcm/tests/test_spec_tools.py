@@ -6,11 +6,11 @@ import pandas as pd
 import scipy
 import yaml
 
-from flexible_ddcm.example.input_functions import (
+from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from flexible_ddcm.example.input_functions import reward_function_nonstandard
-from flexible_ddcm.example.input_functions import transition_function_nonstandard
+from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
 from flexible_ddcm.model_spec_utils import _poisson_length
 from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 from flexible_ddcm.shared import pandas_dot

@@ -6,9 +6,11 @@ def pandas_dot(df, series):
     return df[list(series.index.values)].dot(series)
 
 
-def build_covariates(df, model_options):
+def build_covariates(df, covariates):
     df = df.copy()
-    for col, definition in model_options.get("covariates", {}).items():
+    for col, definition in covariates.items():
+        if col in df:
+            continue
         df[col] = df.eval(definition)
         if df[col].dtype == bool:
             df[col] = df[col].astype(int)
