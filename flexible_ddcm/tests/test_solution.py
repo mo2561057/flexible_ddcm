@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaml
+from scipy.special import softmax
 
 from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,

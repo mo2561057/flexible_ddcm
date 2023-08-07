@@ -21,9 +21,7 @@ def solve(
 ):
     # Need to put into options.
     segmentation_column = "age"
-    # breakpoint()
     state_space = create_state_space(model_options)
-    # breakpoint()
     transitions = build_transition_func_from_params(
         params, state_space, transition_function
     )

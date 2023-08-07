@@ -119,5 +119,16 @@ def test_simulate_func_types():
     simulate_dict = simulate(params["value"])
     assert all(simulate_dict[0].choice == "mbo3")
 
+    # Alos check whether probabilities are drawn correctly:
+    val_1, val_2 = (
+        1,
+        params.loc["observable_type_1", "constant"],
+        params.loc["observable_type_2", "constant"],
+    )
+
+    prob_0 = 1 / (1 + np.exp(val_1) + np.exp(val_1))
+    np.allclose(prob_0, simulate_dict[0].type.value_counts(normalize=True)[0])
+
+
 def test_sample_characteristics():
     pass

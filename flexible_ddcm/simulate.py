@@ -15,6 +15,7 @@ def get_simulate_func(
     transition_function,
     reward_function,
     external_probabilities,
+    shock_function,
     map_transition_to_state_choice_entries,
 ):
     state_space = create_state_space(model_options)
@@ -24,6 +25,7 @@ def get_simulate_func(
         model_options=model_options,
         transition_function=transition_function,
         reward_function=reward_function,
+        shock_function=shock_function,
         external_probabilities=external_probabilities,
         map_transition_to_state_choice_entries=map_transition_to_state_choice_entries,
     )
@@ -35,9 +37,13 @@ def simulate(
     model_options,
     transition_function,
     reward_function,
+    shock_function,
     external_probabilities,
     map_transition_to_state_choice_entries,
 ):
+
+    """For now only iid ev shocks are supported. Shock function can only change things in the
+    first period."""
     _, choice_specific_value_functions, transitions = solve(
         params,
         model_options,
@@ -72,7 +78,12 @@ def simulate(
 
         choices = pd.concat(
             [
-                get_choices(df, choice_specific_value_functions[choice_key], params)
+                get_choices(
+                    df,
+                    choice_specific_value_functions[choice_key],
+                    params,
+                    shock_function,
+                )
                 for choice_key, df in choice_groups.items()
             ]
         )
@@ -125,9 +136,8 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     ].values
 
     # Build covariates required for type creation:
-    covariates_type = _get_required_covariates_sampled_variables(
-        params, model_options)
-    
+    covariates_type = _get_required_covariates_sampled_variables(params, model_options)
+
     out = build_covariates(out, covariates_type)
     # Add estimated probabilities
     for col, specs in model_options["state_space"].items():
@@ -146,16 +156,13 @@ def _get_required_covariates_sampled_variables(params, model_options):
     locs = params.index.map(lambda x: x[0].startswith("observable_"))
     covariates = params[locs].index.get_level_values(1).unique()
     return {
-        key:value for key,value in model_options.get("covariates",{}).items()\
-              if key in covariates}
-    
+        key: value
+        for key, value in model_options.get("covariates", {}).items()
+        if key in covariates
+    }
 
 
-def get_choices(
-    simulation_df,
-    choice_specific_value_function,
-    params,
-):
+def get_choices(simulation_df, choice_specific_value_function, params, shock_function):
     # First map values to each
     value_function_simulation = pd.DataFrame(
         data=choice_specific_value_function.loc[simulation_df["state_key"]].values,
@@ -163,23 +170,15 @@ def get_choices(
         index=simulation_df.index,
     )
 
-    taste_shocks = create_taste_shocks(value_function_simulation, params)
+    taste_shocks = shock_function(value_function_simulation, params)
+    period = simulation_df["period"].iloc[0]
     value_function_simulation = value_function_simulation + taste_shocks
     # Find the max column for each choice.
     choice = value_function_simulation.astype(float).idxmax(axis=1)
+
+    # Add taste shocks to simulation_df
+
     return choice
-
-
-def create_taste_shocks(choice_value_func, params):
-    shocks = pd.DataFrame(
-        index=choice_value_func.index, columns=choice_value_func.columns
-    )
-    shocks[:] = np.random.gumbel(
-        0,
-        params.loc[("ev_shocks", "scale")],
-        size=shocks.shape[0] * shocks.shape[1],
-    ).reshape(shocks.shape)
-    return shocks
 
 
 def create_next_period_df(current_df, transitions, state_space, model_options):
@@ -222,7 +221,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
         [current_df.loc[arrival_states[arrival_states == "terminal"].index], next_df]
     )
     next_df = next_df.astype(model_options.get("dtypes", {}))
-    next_df = build_covariates(next_df, model_options.get("covariates",{}))
+    next_df = build_covariates(next_df, model_options.get("covariates", {}))
 
     return next_df
 
@@ -236,7 +235,8 @@ def _attach_information_to_simulated_df(df, state_space, model_options):
         df.state_key, "variable_key"
     ].values
     df["choice_key"] = state_space.state_space.loc[df.state_key, "choice_key"].values
-    return build_covariates(df, model_options.get("covariates",{}))
+    return build_covariates(df, model_options.get("covariates", {}))
+
 
 def _sample_characteristics(df, params, name, values):
     level_dict = {

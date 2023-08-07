@@ -206,6 +206,19 @@ def lifetime_wages(
     return pd.DataFrame(out)
 
 
+# Here I need a custom shock function
+def extreme_value_shocks(choice_value_func, params):
+    shocks = pd.DataFrame(
+        index=choice_value_func.index, columns=choice_value_func.columns
+    )
+    shocks[:] = np.random.gumbel(
+        0,
+        params.loc[("ev_shocks", "scale")],
+        size=shocks.shape[0] * shocks.shape[1],
+    ).reshape(shocks.shape)
+    return shocks
+
+
 def _expected_log_utility(log_wage, std):
     pass
 

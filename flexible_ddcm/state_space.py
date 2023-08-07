@@ -64,6 +64,7 @@ def create_state_space(model_options):
         ~state_space.variable_key.duplicated(),
         [col for col in states if col not in fixed_states] + ["variable_key"],
     ].set_index("variable_key")
+
     variable_state_space_indexer = {
         tuple(
             variable_state_space.loc[
@@ -123,8 +124,7 @@ def _create_state_space_array(states, model_options):
     for definition in model_options.get("state_space_filter", []):
         state_space = state_space[~state_space.eval(definition)]
     # Build covariats
-    state_space = build_covariates(
-        state_space, model_options.get("covariates",{}))
+    state_space = build_covariates(state_space, model_options.get("covariates", {}))
     return state_space
 
 
