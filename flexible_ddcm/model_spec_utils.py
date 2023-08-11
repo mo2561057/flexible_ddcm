@@ -206,8 +206,7 @@ def lifetime_wages(
     return pd.DataFrame(out)
 
 
-# Here I need a custom shock function
-def extreme_value_shocks(choice_value_func, params):
+def extreme_value_shocks(choice_value_func, params, period):
     shocks = pd.DataFrame(
         index=choice_value_func.index, columns=choice_value_func.columns
     )

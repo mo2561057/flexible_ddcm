@@ -14,8 +14,8 @@ def get_simulate_func(
     model_options,
     transition_function,
     reward_function,
-    external_probabilities,
     shock_function,
+    external_probabilities,
     map_transition_to_state_choice_entries,
 ):
     state_space = create_state_space(model_options)
@@ -170,8 +170,8 @@ def get_choices(simulation_df, choice_specific_value_function, params, shock_fun
         index=simulation_df.index,
     )
 
-    taste_shocks = shock_function(value_function_simulation, params)
     period = simulation_df["period"].iloc[0]
+    taste_shocks = shock_function(value_function_simulation, params, period)
     value_function_simulation = value_function_simulation + taste_shocks
     # Find the max column for each choice.
     choice = value_function_simulation.astype(float).idxmax(axis=1)
