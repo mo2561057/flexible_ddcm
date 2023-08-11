@@ -36,15 +36,16 @@ def create_reg_vault(
 
     vault = (simulate_dict, params, model_options, external_probabilities, seed)
 
-    with open("tests/resources/reg_vault.pkl","wb") as writer:
+    with open("flexible_ddcm/tests/resources/reg_vault.pkl","wb") as writer:
         pkl.dump(vault, writer)
     
 
 
-if __name__=="main":
+if __name__=="__main__":
     params = pd.read_csv(
         "flexible_ddcm/tests/resources/params.csv").set_index(["category", "name"])[["value"]]
-    model_options = yaml.safe_load(open("flexible_ddcm/tests/resources/specification.csv"))
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/tests/resources/specification.yaml"))
     external_probabilities = pd.read_csv(
         "flexible_ddcm/tests/resources/external_probabilities.csv"
     ).drop(columns=["Unnamed: 0"])
