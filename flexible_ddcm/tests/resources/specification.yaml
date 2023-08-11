@@ -31,8 +31,6 @@ state_space:
     list:
       - 0
       - 1
-      - 2
-      - 3
     fixed: True
   ability:
     type: list
@@ -41,8 +39,6 @@ state_space:
     list:
       - 0
       - 1
-      - 2
-      - 3
 
 choices:
   terminal_choices:
