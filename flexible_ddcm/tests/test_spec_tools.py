@@ -21,7 +21,7 @@ def test_lifetime_wage_rewards():
     """Here rewards are tested."""
     params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/tests/resources/specification.yaml")
     )
@@ -36,8 +36,8 @@ def test_lifetime_wage_rewards():
     df = pd.DataFrame()
     df["age"] = periods
     df["exp"] = df["age"] - 20
-    df["parental_income"] = 2
-    df["ability"] = 2
+    df["parental_income"] = 0
+    df["ability"] = 0
     df["constant"] = 1
     df["uni_dropout"] = 0
 
@@ -46,11 +46,11 @@ def test_lifetime_wage_rewards():
     )
     full_utility = (
         rewards.values.reshape(35)
-        * df["exp"].map(lambda x: params.loc[("discount", "discount")].iloc[0] ** x)
+        * df["exp"].map(lambda x: params.loc[("discount", "discount")] ** x)
     ).sum()
 
     sc_point = state_space.state_choice_space_indexer[
-        (20, "mbo4", "mbo4", 2, 2, "vocational_work")
+        (20, "mbo4", "mbo4", 0, 0, "vocational_work")
     ]
     np.isclose(full_utility, rewards_calculated.loc[sc_point].iloc[0])
 

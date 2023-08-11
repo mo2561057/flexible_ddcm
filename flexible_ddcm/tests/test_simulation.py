@@ -78,7 +78,7 @@ def test_simulate_func():
     ).drop(columns=["Unnamed: 0"])
 
     # Set particular returns
-    params.loc[("nonpec_mbo3", "constant")] = 1e10
+    params.loc["nonpec_mbo3", "constant"] = 1e10
 
     simulate = get_simulate_func(
         model_options,
@@ -106,7 +106,7 @@ def test_simulate_func_types():
     ).drop(columns=["Unnamed: 0"])
 
     # Set particular returns
-    params.loc[("nonpec_mbo3", "constant"), "value"] = 1e10
+    params.loc["nonpec_mbo3", "constant"] = 1e10
 
     simulate = get_simulate_func(
         model_options,
