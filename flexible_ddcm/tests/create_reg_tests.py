@@ -43,7 +43,7 @@ def create_reg_vault(
 
 if __name__=="__main__":
     params = pd.read_csv(
-        "flexible_ddcm/tests/resources/params.csv").set_index(["category", "name"])[["value"]]
+        "flexible_ddcm/tests/resources/params.csv").set_index(["category", "name"])["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/tests/resources/specification.yaml"))
     external_probabilities = pd.read_csv(

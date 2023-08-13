@@ -38,6 +38,13 @@ def simulate(
     external_probabilities,
     map_transition_to_state_choice_entries,
 ):
+    """
+    Solves and simulates a prespecified model
+    
+    Args:
+     params: pd.Series
+         Has to be a series otherwise will not work for now.
+    """
     _, choice_specific_value_functions, transitions = solve(
         params,
         model_options,

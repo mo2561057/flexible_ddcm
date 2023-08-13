@@ -75,8 +75,8 @@ choices:
       - (schooling=='vmbo')&(age<22)&(lagged_choice=='havo')
       - (schooling=='vmbo')&(age==16)&(lagged_choice=='vmbo')
     hbo:
-      - (schooling=='mbo4')&(age<25)&(lagged_choice=='mbo4')
-      - (schooling=='havo')&(age<25)&(lagged_choice=='havo')
+      - (schooling=='mbo4')&(age<26)&(lagged_choice=='mbo4')
+      - (schooling=='havo')&(age<26)&(lagged_choice=='havo')
     vocational_work:
       - (schooling=='mbo4')
       - (schooling=='mbo3')
@@ -85,11 +85,16 @@ choices:
     academic_work:
       - (schooling=='hbo')
       
-
 covariates:
   terminal: age==31
   constant: 1
+  grade_1: ability == 1
+  parental_income_1: parental_income == 1
   uni_dropout: schooling!='hbo' & lagged_choice == 'hbo'
+  lagged_choice_mbo3: lagged_choice == 'mbo3' 
+  mbo4: schooling == 'mbo4'
+  mbo3: schooling == 'mbo3'
+  vmbo: schooling == 'vmbo'
   
 state_space_filter:
   - age==16 & lagged_choice!='vmbo'
@@ -98,10 +103,10 @@ state_space_filter:
   - age<17 & schooling=='mbo4'
   - age<17 & schooling=='mbo3'
   - age<20 & schooling=='hbo'
-  - age==17 & schooling!='vmbo'
+  - age==16 & schooling!='vmbo'
   - schooling!='vmbo' & lagged_choice=='vmbo'
   - schooling=='havo' & lagged_choice=='mbo3'
   - schooling=='mbo3' & lagged_choice=='havo'
   - schooling=='mbo3' & lagged_choice=='hbo'
   - schooling=='vmbo' & lagged_choice=='hbo'
-n_simulation_agents: 10000
+n_simulation_agents: 20000
