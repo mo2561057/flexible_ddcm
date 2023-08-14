@@ -19,7 +19,7 @@ from flexible_ddcm.state_space import create_state_space
 
 def test_regression_base():
     simulate_dict, params, model_options, external_probabilities, seed = pd.read_pickle(
-        "tests/resources/reg_vault.pkl")
+        "flexible_ddcm/tests/resources/reg_vault.pkl")
     np.random.seed(seed)
     simulate = get_simulate_func(
         model_options,
