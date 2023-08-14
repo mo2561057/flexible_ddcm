@@ -22,22 +22,13 @@ external_probabilities = pd.read_csv(
     "flexible_ddcm/example/base/external_probabilities.csv"
 ).drop(columns=["Unnamed: 0"])
 
-cont = solve(
-    params,
-    model_options,
-    transition_function_nonstandard,
-    reward_function_nonstandard,
-    map_transition_to_state_choice_entries_nonstandard,
-)
-
 simulate = get_simulate_func(
     model_options,
     transition_function_nonstandard,
     reward_function_nonstandard,
     extreme_value_shocks,
     external_probabilities,
-    map_transition_to_state_choice_entries_nonstandard,
-)
+    map_transition_to_state_choice_entries_nonstandard,)
 
 simulate_dict = simulate(params)
 
@@ -45,6 +36,6 @@ wage_periods = range(3, 16)
 additional_cols = ["ability", "parental_income"]
 schooling_levels = ["vmbo", "mbo3", "mbo4", "havo", "hbo"]
 
-simulate_processed_dict = process_simulation_dict(
-    simulate_dict, params, wage_periods, additional_cols, schooling_levels
-)
+#simulate_processed_dict = process_simulation_dict(
+#    simulate_dict, params, wage_periods, additional_cols, schooling_levels
+#)

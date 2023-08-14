@@ -22,7 +22,6 @@ def map_transition_to_state_choice_entries(
     )
     initial_state = tuple(state_space.state_space.loc[initial])[:position_stop]
 
-    """In this case only the initial state"""
     if arrival_state is None:
         return [state_space.state_choice_space_indexer[(*initial_state, choice)]]
     else:
@@ -100,8 +99,8 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     dropout_length = _assign_probabilities(
         params.loc[f"transition_length_dropout_{choice}{suffix}"], states
     )
-    out = pd.DataFrame(index=states.index)
 
+    out = pd.DataFrame(index=states.index)
     out[[(col + age, choice, choice) for col in length]] = np.einsum(
         "ij,i->ij", length, dropout
     )
@@ -200,7 +199,6 @@ def lifetime_wages(
             final_wage_dict[age].loc[work_utility.index] = (
                 np.exp(log_wage + (std) ** 2 / 2) * (1500) + work_utility
             ) * (im.exp.map(lambda x: discount**x))
-
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
     return pd.DataFrame(out)

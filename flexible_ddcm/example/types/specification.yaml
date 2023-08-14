@@ -31,6 +31,8 @@ state_space:
     list:
       - 0
       - 1
+      - 2
+      - 3
     fixed: True
   ability:
     type: list
@@ -39,6 +41,17 @@ state_space:
     list:
       - 0
       - 1
+      - 2
+      - 3
+  type:
+    type: list
+    start: random_internal
+    fixed: True
+    list:
+      - 0
+      - 1
+      - 2
+
 
 choices:
   terminal_choices:
@@ -89,12 +102,18 @@ covariates:
   terminal: age==31
   constant: 1
   grade_1: ability == 1
+  grade_2: ability == 2
+  grade_3: ability == 3
   parental_income_1: parental_income == 1
+  parental_income_2: parental_income == 2
+  parental_income_3: parental_income == 3
   uni_dropout: schooling!='hbo' & lagged_choice == 'hbo'
   lagged_choice_mbo3: lagged_choice == 'mbo3' 
   mbo4: schooling == 'mbo4'
   mbo3: schooling == 'mbo3'
   vmbo: schooling == 'vmbo'
+  type_1: type == 1
+  type_2: type == 2
   
 state_space_filter:
   - age==16 & lagged_choice!='vmbo'
@@ -109,4 +128,4 @@ state_space_filter:
   - schooling=='mbo3' & lagged_choice=='havo'
   - schooling=='mbo3' & lagged_choice=='hbo'
   - schooling=='vmbo' & lagged_choice=='hbo'
-n_simulation_agents: 20000
+n_simulation_agents: 50000

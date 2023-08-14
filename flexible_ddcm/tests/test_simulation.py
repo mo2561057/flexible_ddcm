@@ -16,7 +16,7 @@ def test_transition_shocks():
     """Test transition probabilities."""
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/example/base/specification.yaml")
     )
@@ -35,10 +35,10 @@ def test_transition_shocks():
         map_transition_to_state_choice_entries_nonstandard,
     )
 
-    simulate_dict = simulate(params["value"])
+    simulate_dict = simulate(params)
 
     transitions = build_transition_func_from_params(
-        params["value"], state_space, transition_function_nonstandard
+        params, state_space, transition_function_nonstandard
     )
 
     # Groupby initial key and chec next key.
@@ -68,7 +68,7 @@ def test_transition_shocks():
 def test_simulate_func():
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/example/base/specification.yaml")
     )
@@ -78,7 +78,7 @@ def test_simulate_func():
     ).drop(columns=["Unnamed: 0"])
 
     # Set particular returns
-    params.loc[("nonpec_mbo3", "constant"), "value"] = 1e10
+    params.loc["nonpec_mbo3", "constant"] = 1e10
 
     simulate = get_simulate_func(
         model_options,
@@ -96,7 +96,7 @@ def test_simulate_func():
 def test_simulate_func_types():
     params = pd.read_csv("flexible_ddcm/example/types/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/example/types/specification.yaml")
     )
@@ -106,7 +106,7 @@ def test_simulate_func_types():
     ).drop(columns=["Unnamed: 0"])
 
     # Set particular returns
-    params.loc[("nonpec_mbo3", "constant"), "value"] = 1e10
+    params.loc["nonpec_mbo3", "constant"] = 1e10
 
     simulate = get_simulate_func(
         model_options,
@@ -116,7 +116,7 @@ def test_simulate_func_types():
         map_transition_to_state_choice_entries_nonstandard,
     )
 
-    simulate_dict = simulate(params["value"])
+    simulate_dict = simulate(params)
     assert all(simulate_dict[0].choice == "mbo3")
 
     # Alos check whether probabilities are drawn correctly:

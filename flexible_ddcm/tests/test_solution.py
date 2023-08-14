@@ -16,14 +16,14 @@ from flexible_ddcm.state_space import create_state_space
 def test_continuation_values_transition():
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/example/base/specification.yaml")
     )
     state_space = create_state_space(model_options)
 
     continuation, choice_value_funcs, transitions = solve(
-        params["value"],
+        params,
         model_options,
         transition_function_nonstandard,
         reward_function_nonstandard,

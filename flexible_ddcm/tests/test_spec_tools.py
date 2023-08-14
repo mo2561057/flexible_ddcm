@@ -18,10 +18,10 @@ from flexible_ddcm.state_space import create_state_space
 
 
 def test_lifetime_wage_rewards():
-    """Here rewards are tested."""
+
     params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/tests/resources/specification.yaml")
     )
@@ -32,27 +32,30 @@ def test_lifetime_wage_rewards():
     )
 
     # Iterate foreward
-    periods = range(20, 55)
+    periods = range(20, 40)
     df = pd.DataFrame()
     df["age"] = periods
     df["exp"] = df["age"] - 20
-    df["parental_income"] = 2
-    df["ability"] = 2
+    df["parental_income_1"] = 0
+    df["grade_1"] = 0
     df["constant"] = 1
     df["uni_dropout"] = 0
+    
+    log_wages = pandas_dot(df, params.loc["wage_vocational"])
 
-    rewards = pandas_dot(df, params.loc["nonpec_vocational"]) + np.exp(
-        pandas_dot(df, params.loc["wage_vocational"])
-    )
-    full_utility = (
-        rewards.values.reshape(35)
-        * df["exp"].map(lambda x: params.loc[("discount", "discount")].iloc[0] ** x)
-    ).sum()
+    log_wages[log_wages>4] = 4
+    work_utility = pandas_dot(df, params.loc["nonpec_vocational"])
+
+    std = params.loc[("wage_shock_vocational", "std")].iloc[0]
+    discount = params.loc[("discount", "discount")].iloc[0]
+    
+    calculated = (np.exp(log_wages + (std) ** 2 / 2) * (1500) + work_utility
+            ) * (df.exp.map(lambda x: discount**x))
 
     sc_point = state_space.state_choice_space_indexer[
-        (20, "mbo4", "mbo4", 2, 2, "vocational_work")
+        (20, "mbo4", "mbo4", 0, 0, "vocational_work")
     ]
-    np.isclose(full_utility, rewards_calculated.loc[sc_point].iloc[0])
+    np.isclose(calculated.sum(), rewards_calculated.loc[sc_point].iloc[0])
 
 
 def test_nonpec_rewards():
@@ -62,7 +65,7 @@ def test_nonpec_rewards():
 def test_poisson_length():
     params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(
         ["category", "name"]
-    )
+    )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/tests/resources/specification.yaml")
     )
@@ -71,17 +74,17 @@ def test_poisson_length():
     states = state_space.state_space[state_space.state_space.variable_key == 0]
 
     actual = _poisson_length(
-        params.loc[f"transition_length_mbo4", "value"],
+        params.loc[f"transition_length_mbo4"],
         states,
-        int(params.loc[("transition_max", f"mbo4"), "value"]),
-        int(params.loc[("transition_min", f"mbo4"), "value"]),
+        int(params.loc[("transition_max", f"mbo4")]),
+        int(params.loc[("transition_min", f"mbo4")]),
     )
-    min_ = params.loc[(f"transition_min", "mbo4"), "value"]
-    max_ = params.loc[(f"transition_max", "mbo4"), "value"]
+    min_ = params.loc[(f"transition_min", "mbo4")]
+    max_ = params.loc[(f"transition_max", "mbo4")]
 
     poisson_vars = params.loc[f"transition_length_mbo4"].index
     lambda_ = sum(
-        states.loc[0, col] * params.loc[(f"transition_length_mbo4", col), "value"]
+        states.loc[0, col] * params.loc[(f"transition_length_mbo4", col)].iloc[0]
         for col in poisson_vars
     )
 
@@ -89,7 +92,7 @@ def test_poisson_length():
         val = val - min
         return ((lambda_ ** (val)) * (math.e ** (lambda_))) / (math.factorial(int(val)))
 
-    dist = {val: poisson(val, lambda_, min_) for val in range(int(min_), int(max_) + 1)}
+    dist = {val: poisson(val, lambda_, min_.iloc[0]) for val in range(int(min_.iloc[0]), int(max_.iloc[0]) + 1)}
     norm = sum(dist.values())
 
     dist = {key: value / norm for key, value in dist.items()}
