@@ -44,7 +44,7 @@ def simulate(
     """For now only iid ev shocks are supported. Shock function can only change things in the
     first period.
     Solves and simulates a prespecified model
-    
+
     Args:
      params: pd.Series
          Has to be a series otherwise will not work for now.
@@ -81,19 +81,23 @@ def simulate(
             ).groups.items()
         }
 
-        choices = pd.concat(
+        choice_objects = pd.concat(
             [
                 get_choices(
                     df,
                     choice_specific_value_functions[choice_key],
                     params,
                     shock_function,
+                    period,
                 )
                 for choice_key, df in choice_groups.items()
             ]
         )
 
-        current_period_df.loc[choices.index, "choice"] = choices.values
+        # current_period_df = current_period_df.join(choice_objects.drop(columns=["choice"]))
+        current_period_df.loc[
+            choice_objects.index, choice_objects.columns
+        ] = choice_objects.values
 
         simulation_data[period] = pd.concat([current_period_df, terminal_df])
 
@@ -167,7 +171,9 @@ def _get_required_covariates_sampled_variables(params, model_options):
     }
 
 
-def get_choices(simulation_df, choice_specific_value_function, params, shock_function):
+def get_choices(
+    simulation_df, choice_specific_value_function, params, shock_function, period
+):
     # First map values to each
     value_function_simulation = pd.DataFrame(
         data=choice_specific_value_function.loc[simulation_df["state_key"]].values,
@@ -175,18 +181,31 @@ def get_choices(simulation_df, choice_specific_value_function, params, shock_fun
         index=simulation_df.index,
     )
 
-    period = simulation_df["period"].iloc[0]
-    taste_shocks = shock_function(value_function_simulation, params, period)
+    taste_shocks, information = shock_function(
+        value_function_simulation, params, period
+    )
     value_function_simulation = value_function_simulation + taste_shocks
+
     # Find the max column for each choice.
     choice = value_function_simulation.astype(float).idxmax(axis=1)
-
-    # Add taste shocks to simulation_df
-
-    return choice
+    out = taste_shocks.rename(columns={col: f"shock_{col}" for col in taste_shocks})
+    out["choice"] = choice
+    return out if information is None else out.join(information)
 
 
 def create_next_period_df(current_df, transitions, state_space, model_options):
+    """
+    Create dataframe for next period simulation.
+    We carry on all terminal individuals to the next period dataframe.
+
+    Args:
+      current_df: pd.DataFrame
+        current period data.
+      transitions: dict of pd.DataFrame
+        transition matrix for all admissible choice and
+        variable_state combinations.
+
+    """
     transition_grouper = current_df.groupby(["variable_key", "choice"]).groups
     arrival_states = pd.Series(index=current_df.index)
     for (variable_key, choice), locs in transition_grouper.items():
@@ -222,9 +241,18 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
     next_df["state_key"] = (
         arrival_states[arrival_states != "terminal"].astype(int).values
     )
-    next_df = pd.concat(
-        [current_df.loc[arrival_states[arrival_states == "terminal"].index], next_df]
+
+    next_df = (
+        pd.concat(
+            [
+                current_df.loc[arrival_states[arrival_states == "terminal"].index],
+                next_df,
+            ]
+        )
+        if (arrival_states == "terminal").any()
+        else next_df
     )
+
     next_df = next_df.astype(model_options.get("dtypes", {}))
     next_df = build_covariates(next_df, model_options.get("covariates", {}))
 

@@ -7,6 +7,7 @@ from flexible_ddcm.example.base.input_functions import (
 )
 from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
 from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
+from flexible_ddcm.model_spec_utils import extreme_value_shocks
 from flexible_ddcm.simulate import get_simulate_func
 from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
@@ -31,6 +32,7 @@ def test_transition_shocks():
         model_options,
         transition_function_nonstandard,
         reward_function_nonstandard,
+        extreme_value_shocks,
         external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
     )
@@ -84,6 +86,7 @@ def test_simulate_func():
         model_options,
         transition_function_nonstandard,
         reward_function_nonstandard,
+        extreme_value_shocks,
         external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
     )
@@ -112,6 +115,7 @@ def test_simulate_func_types():
         model_options,
         transition_function_nonstandard,
         reward_function_nonstandard,
+        extreme_value_shocks,
         external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
     )

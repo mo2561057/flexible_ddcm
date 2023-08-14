@@ -213,12 +213,4 @@ def extreme_value_shocks(choice_value_func, params, period):
         params.loc[("ev_shocks", "scale")],
         size=shocks.shape[0] * shocks.shape[1],
     ).reshape(shocks.shape)
-    return shocks
-
-
-def _expected_log_utility(log_wage, std):
-    pass
-
-
-def _get_scalar():
-    pass
+    return shocks, None

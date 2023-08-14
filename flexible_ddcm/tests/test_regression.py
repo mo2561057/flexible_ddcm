@@ -18,7 +18,8 @@ from flexible_ddcm.state_space import create_state_space
 
 def test_regression_base():
     simulate_dict, params, model_options, external_probabilities, seed = pd.read_pickle(
-        "flexible_ddcm/tests/resources/reg_vault.pkl")
+        "flexible_ddcm/tests/resources/reg_vault.pkl"
+    )
     np.random.seed(seed)
     simulate = get_simulate_func(
         model_options,
@@ -26,15 +27,11 @@ def test_regression_base():
         reward_function_nonstandard,
         external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
-        )
+    )
 
     simulate_dict_actual = simulate(params)
 
     # Compare vault top new thing:
-    
     key_ = max(simulate_dict.keys())
 
-    assert simulate_dict[
-        key_].age.mean() == simulate_dict_actual[key_].age.mean()
-
-
+    assert simulate_dict[key_].age.mean() == simulate_dict_actual[key_].age.mean()
