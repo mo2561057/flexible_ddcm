@@ -100,6 +100,7 @@ def test_simulate_func_types():
     params = pd.read_csv("flexible_ddcm/example/types/params.csv").set_index(
         ["category", "name"]
     )["value"]
+    params = params[~params.index.duplicated()]
     model_options = yaml.safe_load(
         open("flexible_ddcm/example/types/specification.yaml")
     )
@@ -125,13 +126,13 @@ def test_simulate_func_types():
 
     # Alos check whether probabilities are drawn correctly:
     val_1, val_2 = (
-        1,
         params.loc["observable_type_1", "constant"],
         params.loc["observable_type_2", "constant"],
     )
-
-    prob_0 = 1 / (1 + np.exp(val_1) + np.exp(val_1))
-    np.allclose(prob_0, simulate_dict[0].type.value_counts(normalize=True)[0])
+    prob_0 = 1 / (1 + np.exp(val_1) + np.exp(val_2))
+    np.allclose(
+        prob_0, simulate_dict[0].type.value_counts(normalize=True)[0], atol=0.01
+    )
 
 
 def test_sample_characteristics():
