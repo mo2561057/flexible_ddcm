@@ -58,8 +58,8 @@ def simulate(
     )
 
     if "covariates_simulation" in model_options:
-        model_options["covariates"] = {
-            **model_options["covariates"],**model_options["covariates"]}
+        model_options["first_period_covariates"] = {
+            **model_options["covariates"],**model_options["covariates_simulation"]}
     
     simulation_df = _create_simulation_df(
         model_options, state_space, external_probabilities, params
@@ -159,7 +159,9 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
             out[col] = _sample_characteristics(out, params, col, specs["list"])
 
     out.index.name = "Identifier"
-    out = _attach_information_to_simulated_df(out, state_space, model_options)
+    out = _attach_information_to_simulated_df(
+        out, state_space, model_options["state_space"], 
+        model_options["first_period_covariates"])
     out = out.astype(model_options.get("dtypes", {}))
     out["choice"] = np.nan
 
@@ -169,11 +171,13 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
 def _get_required_covariates_sampled_variables(params, model_options):
     locs = params.index.map(lambda x: x[0].startswith("observable_"))
     covariates = params[locs].index.get_level_values(1).unique()
+    
+    covriate_description = (model_options["first_period_covariates"] \
+                            if "first_period_covariates" in model_options else model_options.get("covariates", {}))
     return {
         key: value
-        for key, value in model_options.get("covariates", {}).items()
-        if key in covariates
-    }
+        for key, value in covriate_description.items()
+        if key in covariates}
 
 
 def get_choices(
@@ -264,16 +268,16 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
     return next_df
 
 
-def _attach_information_to_simulated_df(df, state_space, model_options):
+def _attach_information_to_simulated_df(df, state_space, state_space_info, covariates):
     # Get variable key for each row
-    df["state_key"] = df[list(model_options["state_space"].keys())].apply(
+    df["state_key"] = df[list(state_space_info.keys())].apply(
         lambda x: state_space.state_space_indexer[tuple(x)], axis=1
     )
     df["variable_key"] = state_space.state_space.loc[
         df.state_key, "variable_key"
     ].values
     df["choice_key"] = state_space.state_space.loc[df.state_key, "choice_key"].values
-    return build_covariates(df, model_options.get("covariates", {}))
+    return build_covariates(df, covariates)
 
 
 def _sample_characteristics(df, params, name, values):
