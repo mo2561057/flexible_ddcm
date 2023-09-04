@@ -14,6 +14,7 @@ from flexible_ddcm.model_spec_utils import poisson_length
 from flexible_ddcm.model_spec_utils import reward_function
 from flexible_ddcm.model_spec_utils import transition_function
 from flexible_ddcm.model_spec_utils import work_transition
+from flexible_ddcm.shared import pandas_dot
 
 
 def transition_mbo4(states, params, choice, variable_state):
@@ -79,14 +80,11 @@ map_transition_to_state_choice_entries_nonstandard = functools.partial(
 )
 
 
-def ev_shocks_and_transition_costs(choice_value_func, params, period):
+def ev_shocks_and_transition_costs(choice_value_func,df, params, period):
     if period == 0:
-        shocks = extreme_value_shocks(choice_value_func, params, period)[0]
-        transition_costs = np.random.normal(
-            params.loc[("transition_shock_havo", "mean")],
-            params.loc[("transition_shock_havo", "std")],
-            size=shocks.shape[0],
-        )
+        shocks = extreme_value_shocks(choice_value_func,df, params, period)[0]
+        transition_costs = pandas_dot(df, params.loc["transition_costs_havo"])
+
         # Havo position,
         shocks["havo"] = shocks["havo"] + transition_costs
         return shocks, pd.DataFrame(

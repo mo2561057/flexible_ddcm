@@ -57,6 +57,10 @@ def simulate(
         map_transition_to_state_choice_entries,
     )
 
+    if "covariates_simulation" in model_options:
+        model_options["covariates"] = {
+            **model_options["covariates"],**model_options["covariates"]}
+    
     simulation_df = _create_simulation_df(
         model_options, state_space, external_probabilities, params
     )
@@ -145,7 +149,8 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     ].values
 
     # Build covariates required for type creation:
-    covariates_type = _get_required_covariates_sampled_variables(params, model_options)
+    covariates_type = _get_required_covariates_sampled_variables(
+        params, model_options)
 
     out = build_covariates(out, covariates_type)
     # Add estimated probabilities
@@ -182,7 +187,7 @@ def get_choices(
     )
 
     taste_shocks, information = shock_function(
-        value_function_simulation, params, period
+        value_function_simulation, simulation_df, params, period
     )
     value_function_simulation = value_function_simulation + taste_shocks
 
