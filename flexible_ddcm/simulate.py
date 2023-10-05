@@ -59,8 +59,10 @@ def simulate(
 
     if "covariates_simulation" in model_options:
         model_options["first_period_covariates"] = {
-            **model_options["covariates"],**model_options["covariates_simulation"]}
-    
+            **model_options["covariates"],
+            **model_options["covariates_simulation"],
+        }
+
     simulation_df = _create_simulation_df(
         model_options, state_space, external_probabilities, params
     )
@@ -93,6 +95,7 @@ def simulate(
                     params,
                     shock_function,
                     period,
+                    model_options["seed"],
                 )
                 for choice_key, df in choice_groups.items()
             ]
@@ -106,7 +109,11 @@ def simulate(
         simulation_data[period] = pd.concat([current_period_df, terminal_df])
 
         next_period_df = create_next_period_df(
-            current_period_df, transitions, state_space, model_options
+            current_period_df,
+            transitions,
+            state_space,
+            model_options,
+            model_options["seed"] + period + 200,
         )
 
         next_period_df = pd.concat([next_period_df, terminal_df])
@@ -133,6 +140,7 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
             out[state] = specs["start"]
 
     # Assign stochastic states
+    np.random.seed(model_options["seed"] + 2_000_000)
     locs_external = np.random.choice(
         external_probabilities.index,
         p=external_probabilities["probability"],
@@ -149,19 +157,23 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     ].values
 
     # Build covariates required for type creation:
-    covariates_type = _get_required_covariates_sampled_variables(
-        params, model_options)
+    covariates_type = _get_required_covariates_sampled_variables(params, model_options)
 
     out = build_covariates(out, covariates_type)
     # Add estimated probabilities
     for col, specs in model_options["state_space"].items():
         if specs["start"] == "random_internal":
-            out[col] = _sample_characteristics(out, params, col, specs["list"])
+            out[col] = _sample_characteristics(
+                out, params, col, specs["list"], model_options["seed"] + 2_000_001
+            )
 
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(
-        out, state_space, model_options["state_space"], 
-        model_options["first_period_covariates"])
+        out,
+        state_space,
+        model_options["state_space"],
+        model_options["first_period_covariates"],
+    )
     out = out.astype(model_options.get("dtypes", {}))
     out["choice"] = np.nan
 
@@ -171,17 +183,19 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
 def _get_required_covariates_sampled_variables(params, model_options):
     locs = params.index.map(lambda x: x[0].startswith("observable_"))
     covariates = params[locs].index.get_level_values(1).unique()
-    
-    covriate_description = (model_options["first_period_covariates"] \
-                            if "first_period_covariates" in model_options else model_options.get("covariates", {}))
+
+    covriate_description = (
+        model_options["first_period_covariates"]
+        if "first_period_covariates" in model_options
+        else model_options.get("covariates", {})
+    )
     return {
-        key: value
-        for key, value in covriate_description.items()
-        if key in covariates}
+        key: value for key, value in covriate_description.items() if key in covariates
+    }
 
 
 def get_choices(
-    simulation_df, choice_specific_value_function, params, shock_function, period
+    simulation_df, choice_specific_value_function, params, shock_function, period, seed
 ):
     # First map values to each
     value_function_simulation = pd.DataFrame(
@@ -191,7 +205,7 @@ def get_choices(
     )
 
     taste_shocks, information = shock_function(
-        value_function_simulation, simulation_df, params, period
+        value_function_simulation, simulation_df, params, period, seed
     )
     value_function_simulation = value_function_simulation + taste_shocks
 
@@ -202,7 +216,7 @@ def get_choices(
     return out if information is None else out.join(information)
 
 
-def create_next_period_df(current_df, transitions, state_space, model_options):
+def create_next_period_df(current_df, transitions, state_space, model_options, seed):
     """
     Create dataframe for next period simulation.
     We carry on all terminal individuals to the next period dataframe.
@@ -215,6 +229,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options):
         variable_state combinations.
 
     """
+    np.random.seed(seed)
     transition_grouper = current_df.groupby(["variable_key", "choice"]).groups
     arrival_states = pd.Series(index=current_df.index)
     for (variable_key, choice), locs in transition_grouper.items():
@@ -280,7 +295,7 @@ def _attach_information_to_simulated_df(df, state_space, state_space_info, covar
     return build_covariates(df, covariates)
 
 
-def _sample_characteristics(df, params, name, values):
+def _sample_characteristics(df, params, name, values, seed):
     level_dict = {
         value: params.loc[f"observable_{name}_{value}"] for value in values[1:]
     }
@@ -294,11 +309,12 @@ def _sample_characteristics(df, params, name, values):
 
     # Is this the c
     choices = list(level_dict.keys())
-    characteristic = _random_choice(choices, probabilities)
+    characteristic = _random_choice(choices, probabilities, seed)
     return characteristic
 
 
-def _random_choice(choices, probabilities, decimals=5):
+def _random_choice(choices, probabilities, seed, decimals=5):
+    np.random.seed(seed)
     cumulative_distribution = probabilities.cumsum(axis=1)
     # Probabilities often do not sum to one but 0.99999999999999999.
     cumulative_distribution[:, -1] = np.round(cumulative_distribution[:, -1], decimals)

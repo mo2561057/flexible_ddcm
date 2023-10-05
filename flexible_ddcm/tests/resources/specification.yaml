@@ -110,3 +110,4 @@ state_space_filter:
   - schooling=='mbo3' & lagged_choice=='hbo'
   - schooling=='vmbo' & lagged_choice=='hbo'
 n_simulation_agents: 20000
+seed: 5678

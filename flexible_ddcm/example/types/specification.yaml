@@ -51,7 +51,7 @@ state_space:
       - 0
       - 1
       - 2
-
+      
 
 choices:
   terminal_choices:
@@ -112,12 +112,17 @@ covariates:
   mbo4: schooling == 'mbo4'
   mbo3: schooling == 'mbo3'
   vmbo: schooling == 'vmbo'
+  age_norm: age - 16
   type_1: type == 1
   type_2: type == 2
+
+covariates_simulation:
+  school_type_1: school_type==1
+  school_type_2: school_type==2
   
 state_space_filter:
-  - age==16 & lagged_choice!='vmbo'
-  - age==16 & schooling!='vmbo'
+  - age==15 & lagged_choice!='vmbo'
+  - age==15 & schooling!='vmbo'
   - age>20  & lagged_choice=='vmbo'
   - age<17 & schooling=='mbo4'
   - age<17 & schooling=='mbo3'
@@ -128,4 +133,7 @@ state_space_filter:
   - schooling=='mbo3' & lagged_choice=='havo'
   - schooling=='mbo3' & lagged_choice=='hbo'
   - schooling=='vmbo' & lagged_choice=='hbo'
-n_simulation_agents: 50000
+n_simulation_agents: 150000
+dtypes:
+  age: int
+seed: 3457

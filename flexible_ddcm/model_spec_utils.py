@@ -53,7 +53,7 @@ def transition_function(
 ):
     """
     Maps an old state into a probability distribution of new states.
-        Input:
+        Input:mbox
             states: DatFrame
                 (edu, age, parental_income, academic_ability)
             params: dict or pd.DataFrame
@@ -204,13 +204,19 @@ def lifetime_wages(
     return pd.DataFrame(out)
 
 
-def extreme_value_shocks(choice_value_func, df, params, period):
+def extreme_value_shocks(choice_value_func, df, params, period, seed):
+    np.random.seed(seed + period)
     shocks = pd.DataFrame(
         index=choice_value_func.index, columns=choice_value_func.columns
     )
-    shocks[:] = np.random.gumbel(
+
+    base_draws = np.random.uniform(
         0,
-        params.loc[("ev_shocks", "scale")],
+        1,
         size=shocks.shape[0] * shocks.shape[1],
+    )
+
+    shocks[:] = (
+        -params.loc[("ev_shocks", "scale")] * np.log(-np.log(base_draws))
     ).reshape(shocks.shape)
     return shocks, None

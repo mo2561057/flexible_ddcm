@@ -80,15 +80,18 @@ map_transition_to_state_choice_entries_nonstandard = functools.partial(
 )
 
 
-def ev_shocks_and_transition_costs(choice_value_func,df, params, period):
+def ev_shocks_and_transition_costs(choice_value_func, df, params, period, seed):
+
     if period == 0:
-        shocks = extreme_value_shocks(choice_value_func,df, params, period)[0]
+
+        shocks = extreme_value_shocks(choice_value_func, df, params, period, seed)[0]
         transition_costs = pandas_dot(df, params.loc["transition_costs_havo"])
 
         # Havo position,
+        np.random.seed(seed + 1_000_000)
         shocks["havo"] = shocks["havo"] + transition_costs
         return shocks, pd.DataFrame(
             data=transition_costs, index=shocks.index, columns=["transition_cost_havo"]
         )
     else:
-        return extreme_value_shocks(choice_value_func, params, period)
+        return extreme_value_shocks(choice_value_func, params, period, seed)
