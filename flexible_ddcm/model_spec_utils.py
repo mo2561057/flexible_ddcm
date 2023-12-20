@@ -173,14 +173,19 @@ def work_reward(state_choice_df, subset, input_params):
 
 
 def lifetime_wages(
-    state_choice_space, params, wage_key, nonpec_key, discount_key, shock_std_key
+    state_choice_space,
+    params,
+    wage_key,
+    nonpec_key,
+    discount_key,
+    shock_std_key,
+    age_auxiliary=range(16, 40),
 ):
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key]
     nonpec_params = params.loc[nonpec_key]
     discount = get_scalar_from_pandas_object(params, discount_key)
     std = get_scalar_from_pandas_object(params, shock_std_key)
-    age_auxiliary = range(16, 40)
 
     # Calculate relevant values:
     final_wage_dict = {}
