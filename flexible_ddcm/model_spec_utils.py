@@ -180,6 +180,7 @@ def lifetime_wages(
     discount_key,
     shock_std_key,
     age_auxiliary=range(16, 40),
+    age_continuation=None,
 ):
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key]
@@ -204,6 +205,9 @@ def lifetime_wages(
             final_wage_dict[age].loc[work_utility.index] = (
                 np.exp(log_wage + (std) ** 2 / 2) * (1500) + work_utility
             ) * (im.exp.map(lambda x: discount**x))
+    if age_continuation:
+        for age in age_continuation:
+            final_wage_dict[age] = final_wage_dict[max(age_auxiliary)]
     # Sum up lifetime wages
     out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
     return pd.DataFrame(out)
