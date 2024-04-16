@@ -185,32 +185,39 @@ def lifetime_wages(
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key]
     nonpec_params = params.loc[nonpec_key]
-    discount = get_scalar_from_pandas_object(params, discount_key)
-    std = get_scalar_from_pandas_object(params, shock_std_key)
+    discount_factor = get_scalar_from_pandas_object(params, discount_key)
+    shock_std = get_scalar_from_pandas_object(params, shock_std_key)
 
-    # Calculate relevant values:
-    final_wage_dict = {}
+    # Initialize the dictionary to store calculated wages for each age
+    wage_results = {}
     for age in age_auxiliary:
-        im = state_choice_space.copy()
-        im = im.rename(columns={"age": "age_start"})
-        im["age"] = age
-        im["exp"] = im["age"] - im["age_start"]
-        im["exp**2"] = (im["exp"] ** 2) / 100
-        final_wage_dict[age] = pd.Series(0, index=state_choice_space.index)
-        if (im.exp >= 0).any():
-            im = im[im.exp >= 0]
-            log_wage = pandas_dot(im, wage_params).astype(float)
-            log_wage[log_wage > 4] = 4
-            work_utility = pandas_dot(im, nonpec_params)
-            final_wage_dict[age].loc[work_utility.index] = (
-                np.exp(log_wage + (std) ** 2 / 2) * (1500) + work_utility
-            ) * (im.exp.map(lambda x: discount**x))
+        # Prepare intermediate DataFrame
+        modified_df = state_choice_space.copy()
+        modified_df = modified_df.rename(columns={"age": "age_start"})
+        modified_df["age"] = age
+        modified_df["exp"] = modified_df["age"] - modified_df["age_start"]
+        modified_df["exp**2"] = (modified_df["exp"] ** 2) / 100
+
+        # Initialize wages for the current age
+        wage_results[age] = pd.Series(0, index=state_choice_space.index)
+
+        if (modified_df.exp >= 0).any():
+            valid_entries = modified_df[modified_df.exp >= 0]
+            log_wage = pandas_dot(valid_entries, wage_params).astype(float)
+            log_wage[log_wage > 4] = 4  # Cap log wage at 4
+            work_utility = pandas_dot(valid_entries, nonpec_params)
+            wage_results[age].loc[work_utility.index] = (
+                np.exp(log_wage + (shock_std) ** 2 / 2) * 1500 + work_utility
+            ) * (valid_entries.exp.map(lambda x: discount_factor**x))
+
+    # Apply continuation wages if specified
     if age_continuation:
         for age in age_continuation:
-            final_wage_dict[age] = final_wage_dict[max(age_auxiliary)]
-    # Sum up lifetime wages
-    out = functools.reduce(lambda x, y: x + y, list(final_wage_dict.values()))
-    return pd.DataFrame(out)
+            wage_results[age] = wage_results[max(age_auxiliary)]
+
+    # Sum up all calculated wages to a single DataFrame
+    cumulative_wages = functools.reduce(lambda x, y: x + y, wage_results.values())
+    return pd.DataFrame(cumulative_wages)
 
 
 def extreme_value_shocks(choice_value_func, df, params, period, seed):

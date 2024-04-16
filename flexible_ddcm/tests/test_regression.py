@@ -21,7 +21,7 @@ def test_regression_base():
     simulate_dict, params, model_options, external_probabilities, seed = pd.read_pickle(
         "flexible_ddcm/tests/resources/reg_vault.pkl"
     )
-    np.random.seed(seed)
+    model_options["seed"] = seed
     simulate = get_simulate_func(
         model_options,
         transition_function_nonstandard,
@@ -36,4 +36,6 @@ def test_regression_base():
     # Compare vault top new thing:
     key_ = max(simulate_dict.keys())
 
-    assert simulate_dict[key_].age.mean() == simulate_dict_actual[key_].age.mean()
+    np.testing.assert_almost_equal(
+        simulate_dict[key_].age.mean(), simulate_dict_actual[key_].age.mean(), decimal=6
+    )

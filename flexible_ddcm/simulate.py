@@ -57,11 +57,10 @@ def simulate(
         map_transition_to_state_choice_entries,
     )
 
-    if "covariates_simulation" in model_options:
-        model_options["first_period_covariates"] = {
-            **model_options["covariates"],
-            **model_options["covariates_simulation"],
-        }
+    model_options["first_period_covariates"] = {
+        **model_options["covariates"],
+        **model_options.get("covariates_simulation", {}),
+    }
 
     simulation_df = _create_simulation_df(
         model_options, state_space, external_probabilities, params

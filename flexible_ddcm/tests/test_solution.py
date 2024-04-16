@@ -97,3 +97,21 @@ def test_continuation_values_wages():
     assert np.isclose(
         continuation_predicted_weighted, choice_value_funcs[7].loc[0, "havo"]
     )
+
+
+def test_transition_function_nonstandard():
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
+        ["category", "name"]
+    )["value"]
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/example/base/specification.yaml")
+    )
+    state_space = create_state_space(model_options)
+    transitions = transition_function_nonstandard(
+        params,
+        model_options,
+        state_space,
+        map_transition_to_state_choice_entries_nonstandard,
+    )
+    assert isinstance(transitions, dict)
+    assert len(transitions) > 0

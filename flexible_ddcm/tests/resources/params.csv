@@ -27,8 +27,6 @@ transition_length_dropout_mbo4,3,0.33
 transition_length_hbo,constant,1
 transition_length_hbo,grade_1,0
 transition_length_hbo,parental_income_1,0
-transition_length_hbo,parental_income_1,0
-transition_length_hbo,parental_income_1,0
 transition_length_mbo3,constant,1
 transition_length_mbo3,grade_1,0
 transition_length_mbo4,constant,1
