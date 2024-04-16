@@ -18,7 +18,6 @@ from flexible_ddcm.state_space import create_state_space
 
 
 def create_reg_vault(params, model_options, external_probabilities, seed):
-
     model_options["seed"] = seed
     simulate = get_simulate_func(
         model_options,
