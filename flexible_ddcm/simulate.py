@@ -2,12 +2,11 @@ import functools
 
 import numpy as np
 import pandas as pd
-from scipy.special import softmax
 
 from flexible_ddcm.shared import build_covariates
-from flexible_ddcm.shared import pandas_dot
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.transitions import build_transition_func_from_params
 
 
 def get_simulate_func(
@@ -15,8 +14,8 @@ def get_simulate_func(
     transition_function,
     reward_function,
     shock_function,
-    external_probabilities,
     map_transition_to_state_choice_entries,
+    initial_states,
 ):
     state_space = create_state_space(model_options)
     return functools.partial(
@@ -26,8 +25,8 @@ def get_simulate_func(
         transition_function=transition_function,
         reward_function=reward_function,
         shock_function=shock_function,
-        external_probabilities=external_probabilities,
         map_transition_to_state_choice_entries=map_transition_to_state_choice_entries,
+        initial_states=initial_states,
     )
 
 
@@ -38,8 +37,8 @@ def simulate(
     transition_function,
     reward_function,
     shock_function,
-    external_probabilities,
     map_transition_to_state_choice_entries,
+    initial_states,
 ):
     """For now only iid ev shocks are supported. Shock function can only change things in the
     first period.
@@ -49,13 +48,18 @@ def simulate(
      params: pd.Series
          Has to be a series otherwise will not work for now.
     """
+
     _, choice_specific_value_functions, transitions = solve(
         params,
         model_options,
-        transition_function,
+        transition_function.get("subjective", transition_function),
         reward_function,
         map_transition_to_state_choice_entries,
     )
+    if model_options.get("subjective", False):
+        transitions = build_transition_func_from_params(
+            params, state_space, transition_function["objective"]
+        )
 
     model_options["first_period_covariates"] = {
         **model_options["covariates"],
@@ -63,7 +67,7 @@ def simulate(
     }
 
     simulation_df = _create_simulation_df(
-        model_options, state_space, external_probabilities, params
+        model_options, state_space, initial_states, params
     )
 
     simulation_data = {0: simulation_df}
@@ -123,49 +127,8 @@ def simulate(
     return simulation_data
 
 
-def _create_simulation_df(model_options, state_space, external_probabilities, params):
-    """External states must contain joint
-    probability per combination of unobservables."""
-
-    # Assign a start state to each individual.
-    out = pd.DataFrame(
-        index=range(model_options["n_simulation_agents"]),
-        columns=model_options["state_space"].keys(),
-    )
-
-    # Assign all fixed states.
-    for state, specs in model_options["state_space"].items():
-        if specs["start"] not in ["random_external", "random_internal"]:
-            out[state] = specs["start"]
-
-    # Assign stochastic states
-    np.random.seed(model_options["seed"] + 2_000_000)
-    locs_external = np.random.choice(
-        external_probabilities.index,
-        p=external_probabilities["probability"],
-        size=len(out),
-        replace=True,
-    )
-
-    states_external = [
-        col for col in external_probabilities.columns if col != "probability"
-    ]
-
-    out[states_external] = external_probabilities.loc[
-        locs_external, states_external
-    ].values
-
-    # Build covariates required for type creation:
-    covariates_type = _get_required_covariates_sampled_variables(params, model_options)
-
-    out = build_covariates(out, covariates_type)
-    # Add estimated probabilities
-    for col, specs in model_options["state_space"].items():
-        if specs["start"] == "random_internal":
-            out[col] = _sample_characteristics(
-                out, params, col, specs["list"], model_options["seed"] + 2_000_001
-            )
-
+def _create_simulation_df(model_options, state_space, initial_states, params):
+    out = initial_states(model_options, params, state_space)
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(
         out,
@@ -175,22 +138,7 @@ def _create_simulation_df(model_options, state_space, external_probabilities, pa
     )
     out = out.astype(model_options.get("dtypes", {}))
     out["choice"] = np.nan
-
     return out
-
-
-def _get_required_covariates_sampled_variables(params, model_options):
-    locs = params.index.map(lambda x: x[0].startswith("observable_"))
-    covariates = params[locs].index.get_level_values(1).unique()
-
-    covriate_description = (
-        model_options["first_period_covariates"]
-        if "first_period_covariates" in model_options
-        else model_options.get("covariates", {})
-    )
-    return {
-        key: value for key, value in covriate_description.items() if key in covariates
-    }
 
 
 def get_choices(
@@ -292,34 +240,3 @@ def _attach_information_to_simulated_df(df, state_space, state_space_info, covar
     ].values
     df["choice_key"] = state_space.state_space.loc[df.state_key, "choice_key"].values
     return build_covariates(df, covariates)
-
-
-def _sample_characteristics(df, params, name, values, seed):
-    level_dict = {
-        value: params.loc[f"observable_{name}_{value}"] for value in values[1:]
-    }
-    # Coefs relative to first level
-    level_dict[values[0]] = pd.Series(data=[0], index=["constant"])
-    z = ()
-    for coefs in level_dict.values():
-        x_beta = pandas_dot(df, coefs)
-        z += (x_beta,)
-    probabilities = softmax(np.column_stack(z), axis=1)
-
-    # Is this the c
-    choices = list(level_dict.keys())
-    characteristic = _random_choice(choices, probabilities, seed)
-    return characteristic
-
-
-def _random_choice(choices, probabilities, seed, decimals=5):
-    np.random.seed(seed)
-    cumulative_distribution = probabilities.cumsum(axis=1)
-    # Probabilities often do not sum to one but 0.99999999999999999.
-    cumulative_distribution[:, -1] = np.round(cumulative_distribution[:, -1], decimals)
-    u = np.random.rand(cumulative_distribution.shape[0], 1)
-
-    # Note that :func:`np.argmax` returns the first index for multiple maximum values.
-    indices = (u < cumulative_distribution).argmax(axis=1)
-
-    return np.take(choices, indices)

@@ -2,6 +2,7 @@ import functools
 
 from flexible_ddcm.model_spec_utils import between_states_age_variable
 from flexible_ddcm.model_spec_utils import fixed_length_nonstandard
+from flexible_ddcm.model_spec_utils import initial_states_external_and_logit_probs
 from flexible_ddcm.model_spec_utils import lifetime_wages
 from flexible_ddcm.model_spec_utils import map_transition_to_state_choice_entries
 from flexible_ddcm.model_spec_utils import nonpecuniary_reward
@@ -72,4 +73,14 @@ reward_function_nonstandard = functools.partial(
 map_transition_to_state_choice_entries_nonstandard = functools.partial(
     map_transition_to_state_choice_entries,
     get_between_states=between_states_age_variable,
+)
+
+
+external_probabilities = pd.read_csv(
+    "flexible_ddcm/example/types/external_probabilities.csv"
+).drop(columns=["Unnamed: 0"])
+
+initial_states = functools.partial(
+    initial_states_external_and_logit_probs,
+    external_probabilities=external_probabilities,
 )

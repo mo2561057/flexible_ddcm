@@ -6,6 +6,7 @@ import pandas as pd
 from flexible_ddcm.model_spec_utils import between_states_age_variable
 from flexible_ddcm.model_spec_utils import extreme_value_shocks
 from flexible_ddcm.model_spec_utils import fixed_length_nonstandard
+from flexible_ddcm.model_spec_utils import initial_states_external_and_logit_probs
 from flexible_ddcm.model_spec_utils import lifetime_wages
 from flexible_ddcm.model_spec_utils import map_transition_to_state_choice_entries
 from flexible_ddcm.model_spec_utils import nonpecuniary_reward
@@ -81,12 +82,9 @@ map_transition_to_state_choice_entries_nonstandard = functools.partial(
 
 
 def ev_shocks_and_transition_costs(choice_value_func, df, params, period, seed):
-
     if period == 0:
-
         shocks = extreme_value_shocks(choice_value_func, df, params, period, seed)[0]
         transition_costs = pandas_dot(df, params.loc["transition_costs_havo"])
-
         # Havo position,
         np.random.seed(seed + 1_000_000)
         shocks["havo"] = shocks["havo"] + transition_costs
@@ -95,3 +93,13 @@ def ev_shocks_and_transition_costs(choice_value_func, df, params, period, seed):
         )
     else:
         return extreme_value_shocks(choice_value_func, params, period, seed)
+
+
+external_probabilities = pd.read_csv(
+    "flexible_ddcm/example/types/external_probabilities.csv"
+).drop(columns=["Unnamed: 0"])
+
+initial_states = functools.partial(
+    initial_states_external_and_logit_probs,
+    external_probabilities=external_probabilities,
+)

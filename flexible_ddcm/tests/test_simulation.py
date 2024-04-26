@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
+from flexible_ddcm.example.base.input_functions import initial_states
 from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
@@ -33,8 +34,8 @@ def test_transition_shocks():
         transition_function_nonstandard,
         reward_function_nonstandard,
         extreme_value_shocks,
-        external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
+        initial_states,
     )
 
     simulate_dict = simulate(params)
@@ -75,10 +76,6 @@ def test_simulate_func():
         open("flexible_ddcm/example/base/specification.yaml")
     )
 
-    external_probabilities = pd.read_csv(
-        "flexible_ddcm/example/base/external_probabilities.csv"
-    ).drop(columns=["Unnamed: 0"])
-
     # Set particular returns
     params.loc["nonpec_mbo3", "constant"] = 1e10
 
@@ -87,8 +84,8 @@ def test_simulate_func():
         transition_function_nonstandard,
         reward_function_nonstandard,
         extreme_value_shocks,
-        external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
+        initial_states,
     )
 
     simulate_dict = simulate(params)
@@ -105,10 +102,6 @@ def test_simulate_func_types():
         open("flexible_ddcm/example/types/specification.yaml")
     )
 
-    external_probabilities = pd.read_csv(
-        "flexible_ddcm/example/types/external_probabilities.csv"
-    ).drop(columns=["Unnamed: 0"])
-
     # Set particular returns
     params.loc["nonpec_mbo3", "constant"] = 1e10
 
@@ -117,8 +110,8 @@ def test_simulate_func_types():
         transition_function_nonstandard,
         reward_function_nonstandard,
         extreme_value_shocks,
-        external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
+        initial_states,
     )
 
     simulate_dict = simulate(params)

@@ -4,6 +4,7 @@ import pandas as pd
 import yaml
 
 from flexible_ddcm.estimation_utils import process_simulation_dict
+from flexible_ddcm.example.base.input_functions import initial_states
 from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
@@ -18,17 +19,15 @@ params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
     ["category", "name"]
 )[["value"]]
 model_options = yaml.safe_load(open("flexible_ddcm/example/base/specification.yaml"))
-external_probabilities = pd.read_csv(
-    "flexible_ddcm/example/base/external_probabilities.csv"
-).drop(columns=["Unnamed: 0"])
 
 simulate = get_simulate_func(
     model_options,
     transition_function_nonstandard,
     reward_function_nonstandard,
     extreme_value_shocks,
-    external_probabilities,
-    map_transition_to_state_choice_entries_nonstandard,)
+    map_transition_to_state_choice_entries_nonstandard,
+    initial_states,
+)
 
 simulate_dict = simulate(params)
 
@@ -36,6 +35,6 @@ wage_periods = range(3, 16)
 additional_cols = ["ability", "parental_income"]
 schooling_levels = ["vmbo", "mbo3", "mbo4", "havo", "hbo"]
 
-#simulate_processed_dict = process_simulation_dict(
+# simulate_processed_dict = process_simulation_dict(
 #    simulate_dict, params, wage_periods, additional_cols, schooling_levels
-#)
+# )

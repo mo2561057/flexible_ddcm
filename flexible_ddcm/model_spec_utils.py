@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import scipy
 
+from flexible_ddcm.shared import build_covariates
 from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.shared import pandas_dot
 
@@ -236,3 +237,47 @@ def extreme_value_shocks(choice_value_func, df, params, period, seed):
         -params.loc[("ev_shocks", "scale")] * np.log(-np.log(base_draws))
     ).reshape(shocks.shape)
     return shocks, None
+
+
+def initial_states_external_and_logit_probs(
+    external_probabilities, model_options, params
+):
+    """External states must contain joint probability per combination of observables."""
+    # Assign a start state to each individual.
+    out = pd.DataFrame(
+        index=range(model_options["n_simulation_agents"]),
+        columns=model_options["state_space"].keys(),
+    )
+
+    # Assign all fixed states.
+    for state, specs in model_options["state_space"].items():
+        if specs["start"] not in ["random_external", "random_internal"]:
+            out[state] = specs["start"]
+
+    # Assign stochastic states
+    np.random.seed(model_options["seed"] + 2_000_000)
+    locs_external = np.random.choice(
+        external_probabilities.index,
+        p=external_probabilities["probability"],
+        size=len(out),
+        replace=True,
+    )
+    states_external = [
+        col for col in external_probabilities.columns if col != "probability"
+    ]
+
+    out[states_external] = external_probabilities.loc[
+        locs_external, states_external
+    ].values
+
+    # Build covariates required for type creation:
+    covariates_type = _get_required_covariates_sampled_variables(params, model_options)
+
+    out = build_covariates(out, covariates_type)
+    # Add estimated probabilities
+    for col, specs in model_options["state_space"].items():
+        if specs["start"] == "random_internal":
+            out[col] = _sample_characteristics(
+                out, params, col, specs["list"], model_options["seed"] + 2_000_001
+            )
+    return out

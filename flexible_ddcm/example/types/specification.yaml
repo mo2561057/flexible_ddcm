@@ -51,7 +51,6 @@ state_space:
       - 0
       - 1
       - 2
-      
 
 choices:
   terminal_choices:
