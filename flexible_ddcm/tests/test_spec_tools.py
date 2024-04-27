@@ -40,22 +40,23 @@ def test_lifetime_wage_rewards():
     df["grade_1"] = 0
     df["constant"] = 1
     df["uni_dropout"] = 0
-    
+
     log_wages = pandas_dot(df, params.loc["wage_vocational"])
 
-    log_wages[log_wages>4] = 4
+    log_wages[log_wages > 4] = 4
     work_utility = pandas_dot(df, params.loc["nonpec_vocational"])
 
-    std = params.loc[("wage_shock_vocational", "std")].iloc[0]
-    discount = params.loc[("discount", "discount")].iloc[0]
-    
-    calculated = (np.exp(log_wages + (std) ** 2 / 2) * (1500) + work_utility
-            ) * (df.exp.map(lambda x: discount**x))
+    std = params.loc[("wage_shock_vocational", "std")]
+    discount = params.loc[("discount", "discount")]
+
+    calculated = (np.exp(log_wages + (std) ** 2 / 2) * (1500) + work_utility) * (
+        df.exp.map(lambda x: discount**x)
+    )
 
     sc_point = state_space.state_choice_space_indexer[
         (20, "mbo4", "mbo4", 0, 0, "vocational_work")
     ]
-    np.isclose(calculated.sum(), rewards_calculated.loc[sc_point].iloc[0])
+    np.isclose(calculated.sum(), rewards_calculated.loc[sc_point])
 
 
 def test_nonpec_rewards():
@@ -84,7 +85,7 @@ def test_poisson_length():
 
     poisson_vars = params.loc[f"transition_length_mbo4"].index
     lambda_ = sum(
-        states.loc[0, col] * params.loc[(f"transition_length_mbo4", col)].iloc[0]
+        states.loc[0, col] * params.loc[(f"transition_length_mbo4", col)]
         for col in poisson_vars
     )
 
@@ -92,7 +93,7 @@ def test_poisson_length():
         val = val - min
         return ((lambda_ ** (val)) * (math.e ** (lambda_))) / (math.factorial(int(val)))
 
-    dist = {val: poisson(val, lambda_, min_.iloc[0]) for val in range(int(min_.iloc[0]), int(max_.iloc[0]) + 1)}
+    dist = {val: poisson(val, lambda_, min_) for val in range(int(min_), int(max_) + 1)}
     norm = sum(dist.values())
 
     dist = {key: value / norm for key, value in dist.items()}

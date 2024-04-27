@@ -6,8 +6,10 @@ import pandas as pd
 import scipy
 
 from flexible_ddcm.shared import build_covariates
+from flexible_ddcm.shared import get_required_covariates_sampled_variables
 from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.shared import pandas_dot
+from flexible_ddcm.shared import sample_characteristics
 
 
 def map_transition_to_state_choice_entries(
@@ -240,7 +242,7 @@ def extreme_value_shocks(choice_value_func, df, params, period, seed):
 
 
 def initial_states_external_and_logit_probs(
-    external_probabilities, model_options, params
+    model_options, params, external_probabilities
 ):
     """External states must contain joint probability per combination of observables."""
     # Assign a start state to each individual.
@@ -271,13 +273,13 @@ def initial_states_external_and_logit_probs(
     ].values
 
     # Build covariates required for type creation:
-    covariates_type = _get_required_covariates_sampled_variables(params, model_options)
+    covariates_type = get_required_covariates_sampled_variables(params, model_options)
 
     out = build_covariates(out, covariates_type)
     # Add estimated probabilities
     for col, specs in model_options["state_space"].items():
         if specs["start"] == "random_internal":
-            out[col] = _sample_characteristics(
+            out[col] = sample_characteristics(
                 out, params, col, specs["list"], model_options["seed"] + 2_000_001
             )
     return out

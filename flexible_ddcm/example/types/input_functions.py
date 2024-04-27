@@ -97,9 +97,9 @@ def ev_shocks_and_transition_costs(choice_value_func, df, params, period, seed):
 
 external_probabilities = pd.read_csv(
     "flexible_ddcm/example/types/external_probabilities.csv"
-).drop(columns=["Unnamed: 0"])
+)
 
-initial_states = functools.partial(
+initial_states_types = functools.partial(
     initial_states_external_and_logit_probs,
     external_probabilities=external_probabilities,
 )

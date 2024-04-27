@@ -37,11 +37,11 @@ def get_required_covariates_sampled_variables(params, model_options):
     }
 
 
-def _sample_characteristics(df, params, name, values, seed):
+def sample_characteristics(df, params, name, values, seed):
     level_dict = {
         value: params.loc[f"observable_{name}_{value}"] for value in values[1:]
     }
-    # Coefs relative to first level
+
     level_dict[values[0]] = pd.Series(data=[0], index=["constant"])
     z = ()
     for coefs in level_dict.values():
@@ -49,7 +49,6 @@ def _sample_characteristics(df, params, name, values, seed):
         z += (x_beta,)
     probabilities = softmax(np.column_stack(z), axis=1)
 
-    # Is this the c
     choices = list(level_dict.keys())
     characteristic = _random_choice(choices, probabilities, seed)
     return characteristic

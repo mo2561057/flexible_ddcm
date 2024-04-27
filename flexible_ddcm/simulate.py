@@ -52,10 +52,13 @@ def simulate(
     _, choice_specific_value_functions, transitions = solve(
         params,
         model_options,
-        transition_function.get("subjective", transition_function),
+        transition_function.get("subjective")
+        if type(transition_function) == dict
+        else transition_function,
         reward_function,
         map_transition_to_state_choice_entries,
     )
+    # If there is another objective transition we need to get transit probs for that.
     if model_options.get("subjective", False):
         transitions = build_transition_func_from_params(
             params, state_space, transition_function["objective"]
@@ -128,7 +131,7 @@ def simulate(
 
 
 def _create_simulation_df(model_options, state_space, initial_states, params):
-    out = initial_states(model_options, params, state_space)
+    out = initial_states(model_options, params)
     out.index.name = "Identifier"
     out = _attach_information_to_simulated_df(
         out,

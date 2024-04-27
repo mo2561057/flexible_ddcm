@@ -5,7 +5,7 @@ import yaml
 
 from flexible_ddcm.estimation_utils import process_simulation_dict
 from flexible_ddcm.example.types.input_functions import ev_shocks_and_transition_costs
-from flexible_ddcm.example.types.input_functions import initial_states
+from flexible_ddcm.example.types.input_functions import initial_states_types
 from flexible_ddcm.example.types.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
@@ -31,7 +31,7 @@ simulate = get_simulate_func(
     reward_function_nonstandard,
     ev_shocks_and_transition_costs,
     map_transition_to_state_choice_entries_nonstandard,
-    initial_states,
+    initial_states_types,
 )
 
 simulate_dict = simulate(params)

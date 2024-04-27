@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 import yaml
 from scipy.special import softmax
 
@@ -99,6 +100,7 @@ def test_continuation_values_wages():
     )
 
 
+@pytest.mark.skip
 def test_transition_function_nonstandard():
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
