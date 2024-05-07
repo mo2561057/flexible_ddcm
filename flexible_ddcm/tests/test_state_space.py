@@ -32,3 +32,18 @@ def test_segment_keys():
     actual = state_space.state_space[state_space.variable_state_space.columns]
 
     assert (actual.values == predicted.values).all(axis=1).all()
+
+
+def test_grid_types():
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/tests/resources/specification.yaml")
+    )
+    model_options["state_space"]["new_state"] = {
+        "type": "float_grid",
+        "lowest": 0,
+        "highest": 10,
+        "n_points": 10,
+        "start": 0,
+        "fixed": False,
+    }
+    state_space = create_state_space(model_options)

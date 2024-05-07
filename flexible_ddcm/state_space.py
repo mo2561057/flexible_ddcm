@@ -17,6 +17,10 @@ def create_state_space(model_options):
             states[state] = options["list"]
         elif options["type"] == "integer_grid":
             states[state] = list(range(options["lowest"], options["highest"]))
+        elif options["type"] == "float_grid":
+            states[state] = np.linspace(
+                options["lowest"], options["highest"], options["n_points"]
+            )
 
     fixed_states = [
         col

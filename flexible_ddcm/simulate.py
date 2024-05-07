@@ -58,7 +58,7 @@ def simulate(
         reward_function,
         map_transition_to_state_choice_entries,
     )
-    # If there is another objective transition we need to get transit probs for that.
+
     if model_options.get("subjective", False):
         transitions = build_transition_func_from_params(
             params, state_space, transition_function["objective"]
@@ -75,16 +75,19 @@ def simulate(
 
     simulation_data = {0: simulation_df}
     while True:
-        # How should this be structured?
         period = max(simulation_data.keys())
 
         current_period_df = simulation_data[period].copy()[
             (simulation_data[period].choice.isna())
         ]
-
+        # All states with a terminal choice are carried over to the next period.
+        # Thus their choice col is not nan.
         terminal_df = simulation_data[period].copy()[
             (~simulation_data[period].choice.isna())
         ]
+
+        # Add a flag for terminal individuals.
+        terminal_df["terminal"] = 1
 
         choice_groups = {
             choice_key: current_period_df.loc[locs]

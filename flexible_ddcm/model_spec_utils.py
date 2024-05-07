@@ -46,7 +46,9 @@ def reward_function(state_choice_space, params, choice_reward_functions):
         choice_reward_functions[choice](state_choice_space.loc[locs], params)
         for choice, locs in grouper.items()
     ]
+
     out = pd.concat(list_dfs)
+
     out.columns = ["value"]
     return out
 
@@ -165,7 +167,6 @@ def _poisson_length(params, states, max, min):
 def nonpecuniary_reward(state_choice_df, input_params, subset):
     # Just a simple dot product over the state choice space
     params = input_params.loc[subset]
-
     return pandas_dot(state_choice_df, params)
 
 
@@ -234,7 +235,6 @@ def extreme_value_shocks(choice_value_func, df, params, period, seed):
         1,
         size=shocks.shape[0] * shocks.shape[1],
     )
-
     shocks[:] = (
         -params.loc[("ev_shocks", "scale")] * np.log(-np.log(base_draws))
     ).reshape(shocks.shape)
