@@ -14,6 +14,7 @@ from flexible_ddcm.transitions import build_transition_func_from_params
 
 def solve(
     params,
+    model_options,
     state_space,
     transition_function,
     reward_function,
@@ -22,9 +23,8 @@ def solve(
     # Need to put into options.
     segmentation_column = "age"
     transitions = build_transition_func_from_params(
-        params, state_space, transition_function
+        params, model_options, state_space, transition_function
     )
-
     rewards = calculate_rewards_state_choice_space(
         state_space.state_choice_space, params, reward_function
     )[["value"]]

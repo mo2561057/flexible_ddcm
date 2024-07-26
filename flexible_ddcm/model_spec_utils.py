@@ -52,12 +52,10 @@ def reward_function(state_choice_space, params, choice_reward_functions):
     return out
 
 
-def transition_function(
-    states, choice, params, variable_state, choice_transition_functions
-):
+def transition_function(state_space, choice, params, choice_transition_functions):
     """
     Maps an old state into a probability distribution of new states.
-        Input:mbox
+        Input:
             states: DatFrame
                 (edu, age, parental_income, academic_ability)
             params: dict or pd.DataFrame
@@ -67,10 +65,9 @@ def transition_function(
     """
     function_ = choice_transition_functions[choice]
     kwargs = {
-        "states": states,
+        "state_space": state_space,
         "choice": choice,
         "params": params,
-        "variable_state": variable_state,
     }
     arg_names = (
         function_.func.__code__.co_varnames
