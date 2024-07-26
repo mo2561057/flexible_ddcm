@@ -51,7 +51,7 @@ def simulate(
 
     _, choice_specific_value_functions, transitions = solve(
         params,
-        model_options,
+        state_space,
         transition_function.get("subjective")
         if type(transition_function) == dict
         else transition_function,

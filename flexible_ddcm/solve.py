@@ -14,14 +14,13 @@ from flexible_ddcm.transitions import build_transition_func_from_params
 
 def solve(
     params,
-    model_options,
+    state_space,
     transition_function,
     reward_function,
     map_transition_to_state_choice_entries,
 ):
     # Need to put into options.
     segmentation_column = "age"
-    state_space = create_state_space(model_options)
     transitions = build_transition_func_from_params(
         params, state_space, transition_function
     )

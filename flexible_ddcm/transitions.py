@@ -4,7 +4,6 @@ import numpy as np
 
 def build_transition_func_from_params(params, state_space, transition_function):
     grouper = state_space.state_space.groupby(["variable_key"]).groups
-
     out = {}
     for variable_key, locs in grouper.items():
         for choice in state_space.variable_key_to_choice_set[variable_key]:

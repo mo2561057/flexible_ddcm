@@ -48,7 +48,6 @@ def reward_function(state_choice_space, params, choice_reward_functions):
     ]
 
     out = pd.concat(list_dfs)
-
     out.columns = ["value"]
     return out
 
