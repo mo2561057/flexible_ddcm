@@ -27,14 +27,12 @@ def build_transition_func_from_params(
 def _process_transitions(transition_dict, state_space):
     out = dict()
     for key, trans_df in transition_dict.items():
-        im = trans_df.copy().rename(
-            columns={
-                col: state_space.variable_state_space_indexer[tuple(col)]
-                if col != "terminal"
-                else col
-                for col in trans_df
-            }
-        )
-        out[key] = im
+        trans_df.columns = [
+            state_space.variable_state_space_indexer[tuple(col)]
+            if col != "terminal"
+            else col
+            for col in trans_df.columns
+        ]
+        out[key] = trans_df
 
     return out

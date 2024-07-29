@@ -167,7 +167,6 @@ def _map_continuation_to_transition(
         initial, choice, arrival, state_space
     )
 
-    # This seems to not work yet.
     continuation_value = (
         continuation_values.loc[arrival].iloc[0] * (discount ** (len(locs_rewards)))
         if arrival

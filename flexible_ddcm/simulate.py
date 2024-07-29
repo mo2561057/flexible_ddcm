@@ -62,7 +62,7 @@ def simulate(
 
     if model_options.get("subjective", False):
         transitions = build_transition_func_from_params(
-            params, state_space, transition_function["objective"]
+            params, model_options, state_space, transition_function["objective"]
         )
 
     model_options["first_period_covariates"] = {
