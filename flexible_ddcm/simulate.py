@@ -96,7 +96,6 @@ def simulate(
                 "choice_key"
             ).groups.items()
         }
-
         choice_objects = pd.concat(
             [
                 get_choices(
@@ -145,6 +144,7 @@ def _create_simulation_df(model_options, state_space, initial_states, params):
     )
     out = out.astype(model_options.get("dtypes", {}))
     out["choice"] = np.nan
+    out["choice"] = out["choice"].astype(object)
     return out
 
 
@@ -185,7 +185,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options, s
     """
     np.random.seed(seed)
     transition_grouper = current_df.groupby(["variable_key", "choice"]).groups
-    arrival_states = pd.Series(index=current_df.index)
+    arrival_states = pd.Series(index=current_df.index, dtype=object)
     for (variable_key, choice), locs in transition_grouper.items():
         probabilities = transitions[(choice, variable_key)].loc[
             current_df.loc[locs, "state_key"]

@@ -46,6 +46,7 @@ def solve(
 
     # Settle all states that are continuation values only.
     for _, locs in reversed(state_grouper.items()):
+        # This could be paralellized
         for variable_key, locs_variable in (
             state_space.state_space.loc[locs].groupby("variable_key").groups.items()
         ):
