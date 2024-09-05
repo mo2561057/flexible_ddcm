@@ -1,4 +1,4 @@
-name: vocational-housing
+name: flexible_ddcm
 
 channels:
   - conda-forge

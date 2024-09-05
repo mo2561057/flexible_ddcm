@@ -35,7 +35,8 @@ def test_transition_shocks():
         initial_states_base,
     )
 
-    simulate_dict = simulate(params)
+    simulate_dict = simulate(
+        params)
 
     transitions = build_transition_func_from_params(
         params, state_space, transition_function_nonstandard
