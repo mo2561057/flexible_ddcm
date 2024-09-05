@@ -1,0 +1,61 @@
+# ======================================================================================
+# Project metadata
+# ======================================================================================
+
+[project]
+name = "flexible_ddcm"
+description = "dynamic choice models."
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "pandas",
+]
+dynamic = ["version"]
+keywords = [
+    "Estimation",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+authors = [
+    { name = "Moritz Mendel", email = "moritz.mendel12@gmail.com" },
+]
+maintainers = [
+    { name = "Moritz Mendel", email = "moritz.mendel12@gmail.com" },
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+text = "MIT"
+
+[project.urls]
+Repository = "https://github.com/mo2561057/flexible_ddcm"
+Github = "https://github.com/mo2561057/flexible_ddcm"
+Tracker = "https://github.com/mo2561057/flexible_ddcm/issues"
+
+
+# ======================================================================================
+# Build system configuration
+# ======================================================================================
+
+[build-system]
+requires = ["hatchling", "hatch_vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests"]
+only-packages = true
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
