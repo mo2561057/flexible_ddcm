@@ -34,3 +34,9 @@
 *.tmproj
 *.toc
 *.ttt
+*.pyc
+*.DS_store
+__pychache__/
+.ipynb_checkpoints/
+*.db-shm
+*.db-wal
