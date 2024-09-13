@@ -2,17 +2,17 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from flexible_ddcm.example.base.input_functions import initial_states_base
-from flexible_ddcm.example.base.input_functions import (
+from src.flexible_ddcm.example.base.input_functions import initial_states_base
+from src.flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
-from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
-from flexible_ddcm.example.types.input_functions import initial_states_types
-from flexible_ddcm.model_spec_utils import extreme_value_shocks
-from flexible_ddcm.simulate import get_simulate_func
-from flexible_ddcm.state_space import create_state_space
-from flexible_ddcm.transitions import build_transition_func_from_params
+from src.flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from src.flexible_ddcm.example.base.input_functions import transition_function_nonstandard
+from src.flexible_ddcm.example.types.input_functions import initial_states_types
+from src.flexible_ddcm.model_spec_utils import extreme_value_shocks
+from src.flexible_ddcm.simulate import get_simulate_func
+from src.flexible_ddcm.state_space import create_state_space
+from src.flexible_ddcm.transitions import build_transition_func_from_params
 
 
 def test_transition_shocks():
