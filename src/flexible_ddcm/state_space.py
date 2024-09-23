@@ -5,7 +5,7 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 
-from src.flexible_ddcm.shared import build_covariates
+from flexible_ddcm.shared import build_covariates
 
 
 def create_state_space(model_options):

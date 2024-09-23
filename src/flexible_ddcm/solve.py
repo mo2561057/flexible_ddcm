@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 import scipy
 
-from src.flexible_ddcm.rewards import calculate_rewards_state_choice_space
-from src.flexible_ddcm.shared import get_scalar_from_pandas_object
-from src.flexible_ddcm.state_space import create_state_space
-from src.flexible_ddcm.transitions import build_transition_func_from_params
+from flexible_ddcm.rewards import calculate_rewards_state_choice_space
+from flexible_ddcm.shared import get_scalar_from_pandas_object
+from flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.transitions import build_transition_func_from_params
 
 
 def solve(
