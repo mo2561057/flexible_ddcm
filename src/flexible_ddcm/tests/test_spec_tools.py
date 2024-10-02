@@ -6,15 +6,15 @@ import pandas as pd
 import scipy
 import yaml
 
-from src.flexible_ddcm.example.base.input_functions import (
+from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from src.flexible_ddcm.example.base.input_functions import reward_function_nonstandard
-from src.flexible_ddcm.example.base.input_functions import transition_function_nonstandard
-from src.flexible_ddcm.model_spec_utils import _poisson_length
-from src.flexible_ddcm.rewards import calculate_rewards_state_choice_space
-from src.flexible_ddcm.shared import pandas_dot
-from src.flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
+from flexible_ddcm.model_spec_utils import _poisson_length
+from flexible_ddcm.rewards import calculate_rewards_state_choice_space
+from flexible_ddcm.shared import pandas_dot
+from flexible_ddcm.state_space import create_state_space
 
 
 def test_lifetime_wage_rewards():

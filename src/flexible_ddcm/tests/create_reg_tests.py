@@ -27,7 +27,6 @@ def create_reg_vault(params, model_options, external_probabilities, seed):
         external_probabilities,
         map_transition_to_state_choice_entries_nonstandard,
     )
-
     simulate_dict = simulate(params)
 
     vault = (simulate_dict, params, model_options, external_probabilities, seed)
@@ -35,6 +34,8 @@ def create_reg_vault(params, model_options, external_probabilities, seed):
     with open("flexible_ddcm/tests/resources/reg_vault.pkl", "wb") as writer:
         pkl.dump(vault, writer)
 
+def return_example_model():
+    pass
 
 if __name__ == "__main__":
     params = pd.read_csv("flexible_ddcm/tests/resources/params.csv").set_index(

@@ -1,18 +1,45 @@
 import numpy as np
 import pandas as pd
 import yaml
+import pytest
 
-from src.flexible_ddcm.example.base.input_functions import initial_states_base
-from src.flexible_ddcm.example.base.input_functions import (
+from flexible_ddcm.example.base.input_functions import initial_states_base
+from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from src.flexible_ddcm.example.base.input_functions import reward_function_nonstandard
-from src.flexible_ddcm.example.base.input_functions import transition_function_nonstandard
-from src.flexible_ddcm.example.types.input_functions import initial_states_types
-from src.flexible_ddcm.model_spec_utils import extreme_value_shocks
-from src.flexible_ddcm.simulate import get_simulate_func
-from src.flexible_ddcm.state_space import create_state_space
-from src.flexible_ddcm.transitions import build_transition_func_from_params
+from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
+from flexible_ddcm.example.types.input_functions import initial_states_types
+from flexible_ddcm.model_spec_utils import extreme_value_shocks
+from flexible_ddcm.simulate import get_simulate_func
+from flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.transitions import build_transition_func_from_params
+
+
+
+@pytest.fixture
+def simulate_base_model():
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
+        ["category", "name"]
+    )["value"]
+    model_options = yaml.safe_load(
+        open("flexible_ddcm/example/base/specification.yaml")
+    )
+
+    state_space = create_state_space(model_options)
+
+    simulate = get_simulate_func(
+        model_options,
+        transition_function_nonstandard,
+        reward_function_nonstandard,
+        extreme_value_shocks,
+        map_transition_to_state_choice_entries_nonstandard,
+        initial_states_base,
+    )
+    simulate_dict = simulate(
+        params)
+
+    return state_space, simulate_dict
 
 
 def test_transition_shocks():

@@ -4,14 +4,14 @@ import pytest
 import yaml
 from scipy.special import softmax
 
-from src.flexible_ddcm.example.base.input_functions import (
+from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
-from src.flexible_ddcm.example.base.input_functions import reward_function_nonstandard
-from src.flexible_ddcm.example.base.input_functions import transition_function_nonstandard
-from src.flexible_ddcm.shared import get_scalar_from_pandas_object
-from src.flexible_ddcm.solve import solve
-from src.flexible_ddcm.state_space import create_state_space
+from flexible_ddcm.example.base.input_functions import reward_function_nonstandard
+from flexible_ddcm.example.base.input_functions import transition_function_nonstandard
+from flexible_ddcm.shared import get_scalar_from_pandas_object
+from flexible_ddcm.solve import solve
+from flexible_ddcm.state_space import create_state_space
 
 
 def test_continuation_values_transition():
