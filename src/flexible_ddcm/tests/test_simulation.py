@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-import yaml
 import pytest
-
+import yaml
 from flexible_ddcm.example.base.input_functions import initial_states_base
 from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
@@ -16,8 +15,7 @@ from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
 
 
-
-@pytest.fixture
+@pytest.fixture(scope="module")
 def simulate_base_model():
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
@@ -36,34 +34,18 @@ def simulate_base_model():
         map_transition_to_state_choice_entries_nonstandard,
         initial_states_base,
     )
-    simulate_dict = simulate(
-        params)
+    simulate_dict = simulate(params)
 
     return state_space, simulate_dict
 
 
-def test_transition_shocks():
+def test_transition_shocks(simulate_base_model):
     """Test transition probabilities."""
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )["value"]
-    model_options = yaml.safe_load(
-        open("flexible_ddcm/example/base/specification.yaml")
-    )
 
-    state_space = create_state_space(model_options)
-
-    simulate = get_simulate_func(
-        model_options,
-        transition_function_nonstandard,
-        reward_function_nonstandard,
-        extreme_value_shocks,
-        map_transition_to_state_choice_entries_nonstandard,
-        initial_states_base,
-    )
-
-    simulate_dict = simulate(
-        params)
+    state_space, simulate_dict = simulate_base_model
 
     transitions = build_transition_func_from_params(
         params, state_space, transition_function_nonstandard
@@ -151,7 +133,3 @@ def test_simulate_func_types():
     np.allclose(
         prob_0, simulate_dict[0].type.value_counts(normalize=True)[0], atol=0.01
     )
-
-
-def test_sample_characteristics():
-    pass

@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
-from scipy.special import softmax
-
 from flexible_ddcm.example.base.input_functions import (
     map_transition_to_state_choice_entries_nonstandard,
 )
@@ -12,15 +10,18 @@ from flexible_ddcm.example.base.input_functions import transition_function_nonst
 from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
+from scipy.special import softmax
 
 
-def test_continuation_values_transition():
+@pytest.mark.fixture
+def solution_base_model():
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )["value"]
     model_options = yaml.safe_load(
         open("flexible_ddcm/example/base/specification.yaml")
     )
+
     state_space = create_state_space(model_options)
 
     continuation, choice_value_funcs, transitions = solve(
@@ -30,6 +31,15 @@ def test_continuation_values_transition():
         reward_function_nonstandard,
         map_transition_to_state_choice_entries_nonstandard,
     )
+
+    return state_space, continuation, choice_value_funcs, transitions
+
+
+def test_continuation_values_transition(solution_base_model):
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
+        ["category", "name"]
+    )["value"]
+    state_space, continuation, choice_value_funcs, transitions = solution_base_model
 
     choice_value_funcs[7].loc[0, "havo"]
 
@@ -57,22 +67,14 @@ def test_continuation_values_transition():
     )
 
 
-def test_continuation_values_wages():
+def test_continuation_values_wages(solution_base_model):
     params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
         ["category", "name"]
     )
-    model_options = yaml.safe_load(
-        open("flexible_ddcm/example/base/specification.yaml")
-    )
-    state_space = create_state_space(model_options)
-
-    continuation, choice_value_funcs, transitions = solve(
-        params["value"],
-        model_options,
-        transition_function_nonstandard,
-        reward_function_nonstandard,
-        map_transition_to_state_choice_entries_nonstandard,
-    )
+    params = pd.read_csv("flexible_ddcm/example/base/params.csv").set_index(
+        ["category", "name"]
+    )["value"]
+    state_space, continuation, choice_value_funcs, transitions = solution_base_model
 
     choice_value_funcs[7].loc[0, "havo"]
 
