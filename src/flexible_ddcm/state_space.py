@@ -108,7 +108,6 @@ def create_state_space(model_options):
             "state_space_indexer",
             "state_choice_space_indexer",
             "variable_state_space_indexer",
-            "state_and_next_variable_key_to_next_state",
             "state_to_fixed_key",
             "variable_and_fixed_key_to_state",
             "variable_key_to_choice_set",
