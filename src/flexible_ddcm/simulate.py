@@ -2,7 +2,6 @@ import functools
 
 import numpy as np
 import pandas as pd
-
 from flexible_ddcm.shared import build_covariates
 from flexible_ddcm.solve import solve
 from flexible_ddcm.state_space import create_state_space
@@ -16,8 +15,14 @@ def get_simulate_func(
     shock_function,
     map_transition_to_state_choice_entries,
     initial_states,
+    auxiliary_function=lambda x, y, z: (y, z),
 ):
     state_space = create_state_space(model_options)
+
+    transition_function, reward_function = auxiliary_function(
+        state_space, transition_function, reward_function
+    )
+
     return functools.partial(
         simulate,
         state_space=state_space,

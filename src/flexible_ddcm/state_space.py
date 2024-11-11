@@ -4,7 +4,6 @@ from collections import namedtuple
 
 import numpy as np
 import pandas as pd
-
 from flexible_ddcm.shared import build_covariates
 
 
@@ -27,6 +26,13 @@ def create_state_space(model_options):
         for col in model_options["state_space"].keys()
         if model_options["state_space"][col]["fixed"]
     ]
+
+    stochastic_states = [
+        col
+        for col in model_options["state_space"].keys()
+        if model_options["state_space"][col]["stochastic"]
+    ]
+
     state_space = _create_state_space_array(states, model_options)
 
     # Can also keep as a dict of arrays?
@@ -40,9 +46,11 @@ def create_state_space(model_options):
             )
         ]
     )
+    stochastic_states_group = state_space.groupby(stochastic_states)
 
     state_space["variable_key"] = variable_states_group.ngroup()
     state_space["fixed_key"] = fixed_states_group.ngroup()
+    state_space["stochastic_key"] = stochastic_states_group.ngroup()
 
     # Now get state choice space.
     (
@@ -78,6 +86,11 @@ def create_state_space(model_options):
         for ix in variable_state_space.index
     }
 
+    stochastic_state_space = state_space.loc[
+        ~state_space.stochastic_key.duplicated(),
+        [col for col in states if col in stochastic_states] + ["stochastic_key"],
+    ].set_index("stochastic_key")
+
     (
         state_and_next_variable_key_to_next_state,
         state_to_fixed_key,
@@ -92,6 +105,7 @@ def create_state_space(model_options):
             "state_space",
             "state_choice_space",
             "variable_state_space",
+            "stochastic_state_space",
             "state_space_indexer",
             "state_choice_space_indexer",
             "variable_state_space_indexer",
@@ -109,6 +123,7 @@ def create_state_space(model_options):
         state_space,
         state_choice_space,
         variable_state_space,
+        stochastic_state_space,
         state_space_indexer,
         state_choice_space_indexer,
         variable_state_space_indexer,

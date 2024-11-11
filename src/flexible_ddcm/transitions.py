@@ -20,8 +20,10 @@ def _process_transitions(transition_dict, state_space):
             else col
             for col in trans_df.columns
         ]
-        # Check whether
+
+        # Check whether probabilities are close to one.
         assert np.allclose(trans_df.sum(axis=1), np.repeat(1, trans_df.shape[0]))
+
         out[key] = trans_df
 
     return out

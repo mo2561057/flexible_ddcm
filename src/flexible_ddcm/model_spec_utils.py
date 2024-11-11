@@ -1,10 +1,9 @@
-"""Utilities. Gneral model spec utilities."""
+"""General model spec utilities."""
 import functools
 
 import numpy as np
 import pandas as pd
 import scipy
-
 from flexible_ddcm.shared import build_covariates
 from flexible_ddcm.shared import get_required_covariates_sampled_variables
 from flexible_ddcm.shared import get_scalar_from_pandas_object
