@@ -7,6 +7,21 @@ def pandas_dot(df, series):
     return df[list(series.index.values)].dot(series)
 
 
+def build_states(model_options):
+    states = {}
+    # Should just provide funtions. That are labelled ín
+    for state, options in model_options["state_space"].items():
+        if options["type"] == "list":
+            states[state] = options["list"]
+        elif options["type"] == "integer_grid":
+            states[state] = list(range(options["lowest"], options["highest"]))
+        elif options["type"] == "float_grid":
+            states[state] = np.linspace(
+                options["lowest"], options["highest"], options["n_points"]
+            )
+    return states
+
+
 def build_covariates(df, covariates):
     df = df.copy()
     for col, definition in covariates.items():

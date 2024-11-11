@@ -5,21 +5,13 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 from flexible_ddcm.shared import build_covariates
+from flexible_ddcm.shared import build_states
 
 
 def create_state_space(model_options):
     """Build the full state space we need to loop through later."""
-    states = {}
-    # Should just provide funtions. That are labelled ín
-    for state, options in model_options["state_space"].items():
-        if options["type"] == "list":
-            states[state] = options["list"]
-        elif options["type"] == "integer_grid":
-            states[state] = list(range(options["lowest"], options["highest"]))
-        elif options["type"] == "float_grid":
-            states[state] = np.linspace(
-                options["lowest"], options["highest"], options["n_points"]
-            )
+
+    states = build_states(model_options)
 
     fixed_states = [
         col
