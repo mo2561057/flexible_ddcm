@@ -9,6 +9,7 @@ from flexible_ddcm.transitions import build_transition_func_from_params
 
 
 def get_simulate_func(
+    params, 
     model_options,
     transition_function,
     reward_function,
@@ -20,7 +21,7 @@ def get_simulate_func(
     state_space = create_state_space(model_options)
 
     transition_function, reward_function = auxiliary_function(
-        state_space, transition_function, reward_function
+        state_space, model_options, params, transition_function, reward_function
     )
 
     return functools.partial(
