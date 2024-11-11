@@ -92,7 +92,6 @@ def create_state_space(model_options):
     ].set_index("stochastic_key")
 
     (
-        state_and_next_variable_key_to_next_state,
         state_to_fixed_key,
         variable_and_fixed_key_to_state,
         variable_key_to_choice_set,
