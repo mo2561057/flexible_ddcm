@@ -127,7 +127,6 @@ def create_state_space(model_options):
         state_space_indexer,
         state_choice_space_indexer,
         variable_state_space_indexer,
-        state_and_next_variable_key_to_next_state,
         state_to_fixed_key,
         variable_and_fixed_key_to_state,
         variable_key_to_choice_set,
@@ -171,14 +170,6 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
         loc: state_space.loc[loc, "fixed_key"] for loc in state_space.index
     }
 
-    state_and_next_variable_key_to_next_state = {
-        (state, variable_key): variable_and_fixed_key_to_state[
-            (variable_key, state_to_fixed_key[state])
-        ]
-        for state in state_space.index
-        for variable_key in state_space.variable_key.unique()
-    }
-
     # Map variable key to choice set:
     variable_key_to_choice_set = {
         variable_key: choice_key_to_choice_set[choice_key]
@@ -192,7 +183,6 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
     }
 
     return (
-        state_and_next_variable_key_to_next_state,
         state_to_fixed_key,
         variable_and_fixed_key_to_state,
         variable_key_to_choice_set,

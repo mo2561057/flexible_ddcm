@@ -5,7 +5,6 @@ import itertools
 import numpy as np
 import pandas as pd
 import scipy
-
 from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.state_space import create_state_space
@@ -159,8 +158,8 @@ def _map_continuation_to_transition(
     arrival = (
         None
         if variable_key == "terminal"
-        else state_space.state_and_next_variable_key_to_next_state[
-            (initial, variable_key)
+        else state_space.variable_and_fixed_key_to_stateßß[
+            (state_space.state_to_fixed_key[initial], variable_key)
         ]
     )
 
