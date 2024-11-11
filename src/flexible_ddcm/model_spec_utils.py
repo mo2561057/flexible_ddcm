@@ -51,7 +51,9 @@ def reward_function(state_choice_space, params, choice_reward_functions):
     return out
 
 
-def transition_function(state_space, choice, params, choice_transition_functions):
+def bundle_choice_transition_functions(
+    state_space, choice, params, choice_transition_functions
+):
     """
     Maps an old state into a probability distribution of new states.
         Input:
