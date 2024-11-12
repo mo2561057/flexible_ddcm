@@ -124,7 +124,7 @@ def get_continuation_value_for_transitions(
     map_transition_to_state_choice_entries,
 ):
     out = pd.DataFrame(index=transitions.index, columns=transitions.columns)
-
+    # This is the only reason we need all the chunks?
     for state, next_variable_key in itertools.product(
         transitions.index, transitions.columns
     ):
