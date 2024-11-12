@@ -159,7 +159,7 @@ def _map_continuation_to_transition(
         None
         if variable_key == "terminal"
         else state_space.variable_and_fixed_key_to_state[
-            (state_space.state_to_fixed_key[initial], variable_key)
+            (variable_key, state_space.state_to_fixed_key[initial])
         ]
     )
 
