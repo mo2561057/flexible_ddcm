@@ -23,10 +23,8 @@ def _process_transitions(transition_dict, state_space):
         ]
 
         # Check whether probabilities are close to one.
-        try:
-            assert np.allclose(trans_df.sum(axis=1), np.repeat(1, trans_df.shape[0]))
-        except:
-            breakpoint()
-        out[key] = trans_df
+        assert np.allclose(
+            trans_df.sum(axis=1).astype(float).values, np.repeat(1, trans_df.shape[0])
+        )
 
     return out
