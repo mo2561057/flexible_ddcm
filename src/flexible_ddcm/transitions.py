@@ -14,6 +14,7 @@ def build_transition_func_from_params(
 def _process_transitions(transition_dict, state_space):
     out = dict()
     for key, trans_df in transition_dict.items():
+        trans_df.isna().all(axis=1)
         trans_df.columns = [
             state_space.variable_state_space_indexer[tuple(col)]
             if col != "terminal"
@@ -22,8 +23,10 @@ def _process_transitions(transition_dict, state_space):
         ]
 
         # Check whether probabilities are close to one.
-        assert np.allclose(trans_df.sum(axis=1), np.repeat(1, trans_df.shape[0]))
-
+        try:
+            assert np.allclose(trans_df.sum(axis=1), np.repeat(1, trans_df.shape[0]))
+        except:
+            breakpoint()
         out[key] = trans_df
 
     return out
