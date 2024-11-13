@@ -65,7 +65,6 @@ def simulate(
         reward_function,
         map_transition_to_state_choice_entries,
     )
-    breakpoint()
     
     if model_options.get("subjective", False):
         transitions = build_transition_func_from_params(
