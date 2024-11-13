@@ -103,14 +103,14 @@ def get_choice_specific_values(
             transition,
             choice,
             rewards,
-            get_scalar_from_pandas_object(params, ("discount", "discount")),
+            params[("discount", "discount")],
             continuation_values,
             state_space,
             map_transition_to_state_choice_entries,
         ).sum(axis=1)
 
     return out, get_expected_value_ev_shocks(
-        out, get_scalar_from_pandas_object(params, ("ev_shocks", "scale"))
+        out, params[("ev_shocks", "scale")]
     )
 
 
