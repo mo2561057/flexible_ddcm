@@ -208,7 +208,7 @@ def create_next_period_df(current_df, transitions, state_space, model_options, s
             lambda x: state_space.variable_and_fixed_key_to_state[
                 (
                     variable_arrival_keys.loc[x],
-                    state_space.state_to_fixed_key(current_df.loc[x, "state_key"]),
+                    state_space.state_to_fixed_key[current_df.loc[x, "state_key"]],
                     
                 )
             ]
