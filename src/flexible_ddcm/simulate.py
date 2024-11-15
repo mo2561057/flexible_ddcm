@@ -205,10 +205,11 @@ def create_next_period_df(current_df, transitions, state_space, model_options, s
             lambda x: probabilities.columns[x]
         )
         subset_arrival_states = variable_arrival_keys.index.map(
-            lambda x: state_space.fixed_and_variable_key_to_state[
+            lambda x: state_space.variable_and_fixed_key_to_state[
                 (
-                    state_space.state_to_fixed_key(current_df.loc[x, "state_key"]),
                     variable_arrival_keys.loc[x],
+                    state_space.state_to_fixed_key(current_df.loc[x, "state_key"]),
+                    
                 )
             ]
             if variable_arrival_keys.loc[x] != "terminal"
