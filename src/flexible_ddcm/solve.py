@@ -121,22 +121,22 @@ def get_continuation_value_for_transitions(
     state_space,
     map_transition_to_state_choice_entries,
 ):
-    breakpoint()
-    out = pd.DataFrame(index=transitions.index, columns=transitions.columns)
     # This is the only reason we need all the chunks?
-    fixed_keys = state_space.state_to_fixed_key[transitions.index, :]
+    fixed_keys = state_space.state_to_fixed_key[transitions.index]
 
     positions_continuation = state_space.variable_and_fixed_key_to_state[
         np.ix_(fixed_keys, transitions.columns)
     ]
-
-    continuation_values = continuation_values.loc[positions_continuation].values
+    if "terminal" in transitions.columns:
+        continuation_values = np.zeros.shape(transitions.shape)
+    else:
+        continuation_values = continuation_values.loc[positions_continuation].values
 
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
     rewards = rewards[transitions.index]
 
-    return out.values * (rewards + continuation_values * discount)
+    return transitions.values * (rewards + continuation_values * discount)
 
 
 def _map_continuation_to_transition(
