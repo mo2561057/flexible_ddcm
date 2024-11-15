@@ -109,9 +109,7 @@ def get_choice_specific_values(
             map_transition_to_state_choice_entries,
         ).sum(axis=1)
 
-    return out, get_expected_value_ev_shocks(
-        out, params[("ev_shocks", "scale")]
-    )
+    return out, get_expected_value_ev_shocks(out, params[("ev_shocks", "scale")])
 
 
 def get_continuation_value_for_transitions(
@@ -123,24 +121,22 @@ def get_continuation_value_for_transitions(
     state_space,
     map_transition_to_state_choice_entries,
 ):
+    breakpoint()
     out = pd.DataFrame(index=transitions.index, columns=transitions.columns)
     # This is the only reason we need all the chunks?
-    for state, next_variable_key in itertools.product(
-        transitions.index, transitions.columns
-    ):
+    fixed_keys = state_space.state_to_fixed_key[transitions.index, :]
 
-        out.loc[state, next_variable_key] = _map_continuation_to_transition(
-            state,
-            choice,
-            next_variable_key,
-            rewards,
-            continuation_values,
-            discount,
-            state_space,
-            map_transition_to_state_choice_entries,
-        )[0]
+    positions_continuation = state_space.variable_and_fixed_key_to_state[
+        np.ix_(fixed_keys, transitions.columns)
+    ]
 
-    return transitions * out
+    continuation_values = continuation_values.loc[positions_continuation].values
+
+    # Need to differentiate between different scenarios:
+    # Accomodate the new sceanrio as well.
+    rewards = rewards[transitions.index]
+
+    return out.values * (rewards + continuation_values * discount)
 
 
 def _map_continuation_to_transition(

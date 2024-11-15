@@ -9,7 +9,7 @@ from flexible_ddcm.transitions import build_transition_func_from_params
 
 
 def get_simulate_func(
-    params, 
+    params,
     model_options,
     transition_function,
     reward_function,
@@ -65,7 +65,7 @@ def simulate(
         reward_function,
         map_transition_to_state_choice_entries,
     )
-    
+
     if model_options.get("subjective", False):
         transitions = build_transition_func_from_params(
             params, model_options, state_space, transition_function["objective"]
@@ -206,11 +206,8 @@ def create_next_period_df(current_df, transitions, state_space, model_options, s
         )
         subset_arrival_states = variable_arrival_keys.index.map(
             lambda x: state_space.variable_and_fixed_key_to_state[
-                (
-                    variable_arrival_keys.loc[x],
-                    state_space.state_to_fixed_key[current_df.loc[x, "state_key"]],
-                    
-                )
+                state_space.state_to_fixed_key[current_df.loc[x, "state_key"]],
+                variable_arrival_keys.loc[x],
             ]
             if variable_arrival_keys.loc[x] != "terminal"
             else variable_arrival_keys.loc[x]

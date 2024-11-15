@@ -152,13 +152,18 @@ def _create_product_array(array_dict):
 
 
 def create_derived_opjects(state_space, choice_key_to_choice_set):
-    variable_and_fixed_key_to_state = {
-        tuple(state_space.loc[loc, ["variable_key", "fixed_key"]]): loc
-        for loc in state_space.index
-    }
+    variable_and_fixed_key_to_state = np.zeros(
+        (state_space.fixed_key.max() + 1, state_space.variable_key.max() + 1)
+    )
+
+    variable_and_fixed_key_to_state[
+        state_space.fixed_key, state_space.variable_key
+    ] = state_space.index
+
     state_to_fixed_key = {
         loc: state_space.loc[loc, "fixed_key"] for loc in state_space.index
     }
+    state_to_fixed_key = np.array(state_space.fixed_key)
 
     # Map variable key to choice set:
     variable_key_to_choice_set = {
