@@ -139,7 +139,7 @@ def get_continuation_value_for_transitions(
     rewards = rewards.loc[
         state_space.state_and_choice_to_state_choice[choice][transitions.index.values]]
 
-    return transitions.values * (rewards + continuation_values * discount)
+    return transitions.values * (rewards.values + continuation_values * discount)
 
 
 def _map_continuation_to_transition(
