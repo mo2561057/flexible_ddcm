@@ -79,6 +79,8 @@ def solve(
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
+    continuation_values = pd.DataFrame(
+        continuation_values, columns=["continuation_value"]).dropna(axis=0)
     return continuation_values, choice_specific_value_function, transitions
 
 
