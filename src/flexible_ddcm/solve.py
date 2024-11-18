@@ -134,8 +134,11 @@ def get_continuation_value_for_transitions(
 
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
-    rewards = rewards[transitions.index]
-
+    try:
+        rewards = rewards[transitions.index]
+    except KeyError:
+        breakpoint()
+        
     return transitions.values * (rewards + continuation_values * discount)
 
 
