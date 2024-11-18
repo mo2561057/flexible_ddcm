@@ -124,12 +124,12 @@ def get_continuation_value_for_transitions(
     # This is the only reason we need all the chunks?
     fixed_keys = state_space.state_to_fixed_key[transitions.index]
 
-    positions_continuation = state_space.variable_and_fixed_key_to_state[
-        np.ix_(fixed_keys, transitions.columns)
-    ]
     if "terminal" in transitions.columns:
         continuation_values = np.zeros.shape(transitions.shape)
     else:
+        positions_continuation = state_space.variable_and_fixed_key_to_state[
+            np.ix_(fixed_keys, transitions.columns)
+        ]
         continuation_values = continuation_values.loc[positions_continuation].values
 
     # Need to differentiate between different scenarios:
