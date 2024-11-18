@@ -26,14 +26,13 @@ def solve(
     )
     rewards = calculate_rewards_state_choice_space(
         state_space.state_choice_space, params, reward_function
-    )[["value"]]
+    )
 
     # Segment state space into chunks that we iterate over.
     state_grouper = state_space.state_space.groupby(segmentation_column).groups
 
     # Initiate Continuation values
-    continuation_values = np.full(
-        state_space.state_space.index.max()+1, np.nan)
+    continuation_values = np.full(state_space.state_space.index.max() + 1, np.nan)
 
     # Initiate array to keep all entries from
     choice_specific_value_function = {
@@ -65,10 +64,10 @@ def solve(
                     state_space,
                     map_transition_to_state_choice_entries,
                 )
-                continuation_values[
+                continuation_values[locs_variable] = continuation_values_key.loc[
                     locs_variable
-                ] = continuation_values_key.loc[locs_variable].values
- 
+                ].values
+
                 choice_specific_value_function[choice_key].append(
                     choice_specific_value_function_key
                 )
@@ -80,7 +79,8 @@ def solve(
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
     continuation_values = pd.DataFrame(
-        continuation_values, columns=["continuation_value"]).dropna(axis=0)
+        continuation_values, columns=["continuation_value"]
+    ).dropna(axis=0)
     return continuation_values, choice_specific_value_function, transitions
 
 
@@ -136,8 +136,9 @@ def get_continuation_value_for_transitions(
 
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
-    rewards = rewards.loc[
-        state_space.state_and_choice_to_state_choice[choice][transitions.index.values]]
+    rewards = rewards[
+        state_space.state_and_choice_to_state_choice[choice][transitions.index.values]
+    ]
 
     return transitions.values * (rewards.values + continuation_values * discount)
 
