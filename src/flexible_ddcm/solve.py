@@ -137,7 +137,7 @@ def get_continuation_value_for_transitions(
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
     rewards = rewards[
-        state_space.state_and_choice_to_state_choice[choice][transitions.index.values]
+        state_space.state_and_choice_to_state_choice[choice][transitions.index.values].astype(int)
     ]
 
     return transitions.values * (rewards.values + continuation_values * discount)
