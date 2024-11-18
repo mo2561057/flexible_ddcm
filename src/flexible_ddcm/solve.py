@@ -32,9 +32,8 @@ def solve(
     state_grouper = state_space.state_space.groupby(segmentation_column).groups
 
     # Initiate Continuation values
-    continuation_values = pd.DataFrame(
-        index=state_space.state_space.index, columns=["continuation_value"]
-    )
+    continuation_values = np.full(
+        state_space.state_space.index.max+1, np.nan)
 
     # Initiate array to keep all entries from
     choice_specific_value_function = {
@@ -66,9 +65,10 @@ def solve(
                     state_space,
                     map_transition_to_state_choice_entries,
                 )
-                continuation_values.loc[
-                    locs_variable, "continuation_value"
+                continuation_values[
+                    locs_variable
                 ] = continuation_values_key.loc[locs_variable].values
+ 
                 choice_specific_value_function[choice_key].append(
                     choice_specific_value_function_key
                 )
@@ -127,16 +127,15 @@ def get_continuation_value_for_transitions(
     if "terminal" in transitions.columns:
         continuation_values = np.zeros(transitions.shape)
     else:
-        try:
-            positions_continuation = state_space.variable_and_fixed_key_to_state[
-                np.ix_(fixed_keys.astype(np.int32), transitions.columns)
-            ]
-            continuation_values = continuation_values.loc[positions_continuation].values
-        except ValueError:
-            breakpoint()
+        positions_continuation = state_space.variable_and_fixed_key_to_state[
+            np.ix_(fixed_keys.astype(np.int32), transitions.columns)
+        ]
+        continuation_values = continuation_values[positions_continuation]
+
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
-    rewards = rewards.loc[transitions.index]
+    rewards = rewards.loc[
+        state_space.state_and_choice_to_state_choice[choice][transitions.index.values]]
 
     return transitions.values * (rewards + continuation_values * discount)
 

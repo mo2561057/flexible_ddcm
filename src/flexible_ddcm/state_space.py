@@ -88,7 +88,8 @@ def create_state_space(model_options):
         variable_and_fixed_key_to_state,
         variable_key_to_choice_set,
         choice_set_to_choice_key,
-    ) = create_derived_opjects(state_space, choice_key_to_choice_set)
+        state_and_choice_to_state_choice,
+    ) = create_derived_opjects(state_space, choice_key_to_choice_set, state_choice_space)
 
     state_space_container = namedtuple(
         "state_space",
@@ -106,6 +107,7 @@ def create_state_space(model_options):
             "choice_key_to_choice_set",
             "choice_set_to_choice_key",
             "states",
+            "state_and_choice_to_state_choice",
         ],
     )
 
@@ -123,6 +125,7 @@ def create_state_space(model_options):
         choice_key_to_choice_set,
         choice_set_to_choice_key,
         list(states.keys()),
+        state_and_choice_to_state_choice
     )
 
 
@@ -151,7 +154,7 @@ def _create_product_array(array_dict):
     )
 
 
-def create_derived_opjects(state_space, choice_key_to_choice_set):
+def create_derived_opjects(state_space, choice_key_to_choice_set, state_choice_space):
     variable_and_fixed_key_to_state = np.zeros(
         (state_space.fixed_key.max() + 1, state_space.variable_key.max() + 1)
     )
@@ -159,6 +162,7 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
     variable_and_fixed_key_to_state[
         state_space.fixed_key, state_space.variable_key
     ] = state_space.index
+    variable_and_fixed_key_to_state = variable_and_fixed_key_to_state.astype(int)
 
     state_to_fixed_key = np.zeros(
         (state_space.index.max() + 1)
@@ -166,6 +170,15 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
 
     state_to_fixed_key[state_space.index.values
                        ] = state_space.fixed_key.values
+
+    state_to_fixed_key = state_to_fixed_key.astype(int)
+
+    state_and_choice_to_state_choice = {
+        choice: np.zeros(state_choice_space.state_key.max() + 1) for choice in state_choice_space.choice.unique()
+    }
+    for key in state_and_choice_to_state_choice:
+        state_and_choice_to_state_choice[key][state_choice_space.state_key.values] = state_choice_space.index.values
+    state_and_choice_to_state_choice = state_and_choice_to_state_choice.astype(int)
 
     # Map variable key to choice set:
     variable_key_to_choice_set = {
@@ -184,6 +197,7 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
         variable_and_fixed_key_to_state,
         variable_key_to_choice_set,
         choice_set_to_choice_key,
+        state_and_choice_to_state_choice
     )
 
 
