@@ -179,8 +179,7 @@ def create_derived_opjects(state_space, choice_key_to_choice_set, state_choice_s
     for key in state_and_choice_to_state_choice:
         state_and_choice_to_state_choice[key][
             state_choice_space.state_key.values
-        ] = state_choice_space.index.values
-    state_and_choice_to_state_choice = state_and_choice_to_state_choice.astype(int)
+        ] = state_choice_space.index.values.astype(int)
 
     # Map variable key to choice set:
     variable_key_to_choice_set = {
