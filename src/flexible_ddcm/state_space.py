@@ -160,10 +160,12 @@ def create_derived_opjects(state_space, choice_key_to_choice_set):
         state_space.fixed_key, state_space.variable_key
     ] = state_space.index
 
-    state_to_fixed_key = {
-        loc: state_space.loc[loc, "fixed_key"] for loc in state_space.index
-    }
-    state_to_fixed_key = np.array(state_space.fixed_key)
+    state_to_fixed_key = np.zeros(
+        (state_space.index.max() + 1)
+    )
+
+    state_to_fixed_key[state_space.state_space.index.values
+                       ] = state_space.fixed_key.values
 
     # Map variable key to choice set:
     variable_key_to_choice_set = {
