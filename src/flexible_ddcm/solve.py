@@ -125,7 +125,7 @@ def get_continuation_value_for_transitions(
     fixed_keys = state_space.state_to_fixed_key[transitions.index]
 
     if "terminal" in transitions.columns:
-        continuation_values = np.zeros.shape(transitions.shape)
+        continuation_values = np.zeros(transitions.shape)
     else:
         positions_continuation = state_space.variable_and_fixed_key_to_state[
             np.ix_(fixed_keys, transitions.columns)
