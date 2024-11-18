@@ -127,11 +127,13 @@ def get_continuation_value_for_transitions(
     if "terminal" in transitions.columns:
         continuation_values = np.zeros(transitions.shape)
     else:
-        positions_continuation = state_space.variable_and_fixed_key_to_state[
-            np.ix_(fixed_keys.astype(np.int32), transitions.columns)
-        ]
-        continuation_values = continuation_values.loc[positions_continuation].values
-
+        try:
+            positions_continuation = state_space.variable_and_fixed_key_to_state[
+                np.ix_(fixed_keys.astype(np.int32), transitions.columns)
+            ]
+            continuation_values = continuation_values.loc[positions_continuation].values
+        except ValueError:
+            breakpoint()
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
     rewards = rewards.loc[transitions.index]
