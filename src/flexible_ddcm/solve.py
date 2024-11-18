@@ -33,7 +33,7 @@ def solve(
 
     # Initiate Continuation values
     continuation_values = np.full(
-        state_space.state_space.index.max+1, np.nan)
+        state_space.state_space.index.max()+1, np.nan)
 
     # Initiate array to keep all entries from
     choice_specific_value_function = {
