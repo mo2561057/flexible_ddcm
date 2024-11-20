@@ -19,12 +19,6 @@ def create_state_space(model_options):
         if model_options["state_space"][col]["fixed"]
     ]
 
-    stochastic_states = [
-        col
-        for col in model_options["state_space"].keys()
-        if model_options["state_space"][col]["stochastic"]
-    ]
-
     state_space = _create_state_space_array(states, model_options)
 
     # Can also keep as a dict of arrays?
@@ -38,11 +32,9 @@ def create_state_space(model_options):
             )
         ]
     )
-    stochastic_states_group = state_space.groupby(stochastic_states)
 
     state_space["variable_key"] = variable_states_group.ngroup()
     state_space["fixed_key"] = fixed_states_group.ngroup()
-    state_space["stochastic_key"] = stochastic_states_group.ngroup()
 
     # Now get state choice space.
     (
@@ -77,7 +69,6 @@ def create_state_space(model_options):
         ): ix
         for ix in variable_state_space.index
     }
-
 
     (
         state_to_fixed_key,
