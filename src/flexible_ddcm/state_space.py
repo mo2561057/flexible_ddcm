@@ -78,10 +78,6 @@ def create_state_space(model_options):
         for ix in variable_state_space.index
     }
 
-    stochastic_state_space = state_space.loc[
-        ~state_space.stochastic_key.duplicated(),
-        [col for col in states if col in stochastic_states] + ["stochastic_key"],
-    ].set_index("stochastic_key")
 
     (
         state_to_fixed_key,
@@ -99,7 +95,6 @@ def create_state_space(model_options):
             "state_space",
             "state_choice_space",
             "variable_state_space",
-            "stochastic_state_space",
             "state_space_indexer",
             "state_choice_space_indexer",
             "variable_state_space_indexer",
@@ -117,7 +112,6 @@ def create_state_space(model_options):
         state_space,
         state_choice_space,
         variable_state_space,
-        stochastic_state_space,
         state_space_indexer,
         state_choice_space_indexer,
         variable_state_space_indexer,
