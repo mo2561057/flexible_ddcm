@@ -139,7 +139,7 @@ def get_continuation_value_for_transitions(
     rewards_transition = rewards[
         state_space.state_and_choice_to_state_choice[choice][transitions.index.values].astype(int)
     ]
-
+    breakpoint()
     return transitions.values * (rewards_transition.reshape(
         len(rewards_transition),1) + continuation_values * discount)
 
