@@ -121,6 +121,8 @@ def _create_state_space_array(states, model_options):
     # Filter state space
     for definition in model_options.get("state_space_filter", []):
         state_space = state_space[~state_space.eval(definition)]
+    # Reset index
+    state_space.index = range(state_space.shape[0])
     # Build covariats
     state_space = build_covariates(state_space, model_options.get("covariates", {}))
     return state_space
