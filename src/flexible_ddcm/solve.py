@@ -51,6 +51,7 @@ def solve(
             choice_key = state_space.choice_set_to_choice_key[tuple(choices)]
 
             if choices:
+                
                 (
                     choice_specific_value_function_key,
                     continuation_values_key,
@@ -64,6 +65,7 @@ def solve(
                     state_space,
                     map_transition_to_state_choice_entries,
                 )
+                breakpoint()
                 continuation_values[locs_variable] = continuation_values_key.loc[
                     locs_variable
                 ].values
