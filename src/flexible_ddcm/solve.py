@@ -101,7 +101,6 @@ def get_choice_specific_values(
     for choice in choices:
         transition = transitions[(choice, variable_point)]
         # Get continuation values.
-        breakpoint()
         out[choice] = get_continuation_value_for_transitions(
             transition,
             choice,
