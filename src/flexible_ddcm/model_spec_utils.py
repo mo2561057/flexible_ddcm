@@ -45,7 +45,6 @@ def reward_function(state_choice_space, params, choice_reward_functions):
         choice_reward_functions[choice](state_choice_space.loc[locs], params)
         for choice, locs in grouper.items()
     ]
-    breakpoint()
     out = pd.concat(list_dfs)
     out.columns = ["value"]
     return out
