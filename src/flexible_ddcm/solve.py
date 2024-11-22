@@ -65,8 +65,7 @@ def solve(
                     state_space,
                     map_transition_to_state_choice_entries,
                 )
-                if "low_attendance" in choices:
-                    breakpoint()
+                
                 continuation_values[locs_variable] = continuation_values_key.loc[
                     locs_variable
                 ].values
