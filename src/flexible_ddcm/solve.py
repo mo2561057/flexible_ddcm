@@ -77,7 +77,6 @@ def solve(
             else:
                 continuation_values.loc[locs_variable, "continuation_value"] = np.nan
 
-    breakpoint()
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
