@@ -65,7 +65,7 @@ def solve(
                     state_space,
                     map_transition_to_state_choice_entries,
                 )
-                
+
                 continuation_values[locs_variable] = continuation_values_key.loc[
                     locs_variable
                 ].values
@@ -77,6 +77,7 @@ def solve(
             else:
                 continuation_values.loc[locs_variable, "continuation_value"] = np.nan
 
+    breakpoint()
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
