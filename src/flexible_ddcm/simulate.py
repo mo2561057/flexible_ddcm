@@ -8,6 +8,78 @@ from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
 
 
+def create_next_period_df_transition_func(
+    current_df, transitions, state_space, model_options, params, seed
+):
+    """
+    Create dataframe for next period simulation.
+    We carry on all terminal individuals to the next period dataframe.
+
+    Args:
+      current_df: pd.DataFrame
+        current period data.
+      transitions: dict of pd.DataFrame
+        transition matrix for all admissible choice and
+        variable_state combinations.
+
+    """
+
+    np.random.seed(seed)
+    transition_grouper = current_df.groupby(["variable_key", "choice"]).groups
+    arrival_states = pd.Series(index=current_df.index, dtype=object)
+
+    for (variable_key, choice), locs in transition_grouper.items():
+        probabilities = transitions[(choice, variable_key)].loc[
+            current_df.loc[locs, "state_key"]
+        ]
+
+        cdf = np.array(probabilities.cumsum(axis=1))
+        u = np.random.rand(len(cdf), 1)
+        indices = (u < cdf).argmax(axis=1)
+
+        variable_arrival_keys = pd.Series(indices, index=locs).map(
+            lambda x: probabilities.columns[x]
+        )
+        subset_arrival_states = variable_arrival_keys.index.map(
+            lambda x: state_space.variable_and_fixed_key_to_state[
+                state_space.state_to_fixed_key[current_df.loc[x, "state_key"]],
+                variable_arrival_keys.loc[x],
+            ]
+            if variable_arrival_keys.loc[x] != "terminal"
+            else variable_arrival_keys.loc[x]
+        )
+
+        arrival_states[variable_arrival_keys.index] = subset_arrival_states.values
+
+    # Which columns do we want to keep? Potentially need to curb this.
+    next_df = pd.DataFrame(
+        data=state_space.state_space.loc[
+            arrival_states[arrival_states != "terminal"]
+        ].values,
+        columns=state_space.state_space.columns,
+        index=arrival_states[arrival_states != "terminal"].index,
+    )
+    next_df["state_key"] = (
+        arrival_states[arrival_states != "terminal"].astype(int).values
+    )
+
+    next_df = (
+        pd.concat(
+            [
+                current_df.loc[arrival_states[arrival_states == "terminal"].index],
+                next_df,
+            ]
+        )
+        if (arrival_states == "terminal").any()
+        else next_df
+    )
+
+    next_df = next_df.astype(model_options.get("dtypes", {}))
+    next_df = build_covariates(next_df, model_options.get("covariates", {}))
+
+    return next_df
+
+
 def get_simulate_func(
     params,
     model_options,
@@ -17,6 +89,7 @@ def get_simulate_func(
     map_transition_to_state_choice_entries,
     initial_states,
     auxiliary_function=lambda x, y, z: (y, z),
+    create_next_period_df=create_next_period_df_transition_func,
 ):
     state_space = create_state_space(model_options)
 
@@ -33,6 +106,7 @@ def get_simulate_func(
         shock_function=shock_function,
         map_transition_to_state_choice_entries=map_transition_to_state_choice_entries,
         initial_states=initial_states,
+        create_next_period_df=create_next_period_df,
     )
 
 
@@ -45,6 +119,7 @@ def simulate(
     shock_function,
     map_transition_to_state_choice_entries,
     initial_states,
+    create_next_period_df,
 ):
     """For now only iid ev shocks are supported. Shock function can only change things in the
     first period.
@@ -128,6 +203,7 @@ def simulate(
             transitions,
             state_space,
             model_options,
+            params,
             model_options["seed"] + period + 200,
         )
 
@@ -174,74 +250,6 @@ def get_choices(
     out = taste_shocks.rename(columns={col: f"shock_{col}" for col in taste_shocks})
     out["choice"] = choice
     return out if information is None else out.join(information)
-
-
-def create_next_period_df(current_df, transitions, state_space, model_options, seed):
-    """
-    Create dataframe for next period simulation.
-    We carry on all terminal individuals to the next period dataframe.
-
-    Args:
-      current_df: pd.DataFrame
-        current period data.
-      transitions: dict of pd.DataFrame
-        transition matrix for all admissible choice and
-        variable_state combinations.
-
-    """
-    np.random.seed(seed)
-    transition_grouper = current_df.groupby(["variable_key", "choice"]).groups
-    arrival_states = pd.Series(index=current_df.index, dtype=object)
-    for (variable_key, choice), locs in transition_grouper.items():
-        probabilities = transitions[(choice, variable_key)].loc[
-            current_df.loc[locs, "state_key"]
-        ]
-
-        cdf = np.array(probabilities.cumsum(axis=1))
-        u = np.random.rand(len(cdf), 1)
-        indices = (u < cdf).argmax(axis=1)
-
-        variable_arrival_keys = pd.Series(indices, index=locs).map(
-            lambda x: probabilities.columns[x]
-        )
-        subset_arrival_states = variable_arrival_keys.index.map(
-            lambda x: state_space.variable_and_fixed_key_to_state[
-                state_space.state_to_fixed_key[current_df.loc[x, "state_key"]],
-                variable_arrival_keys.loc[x],
-            ]
-            if variable_arrival_keys.loc[x] != "terminal"
-            else variable_arrival_keys.loc[x]
-        )
-
-        arrival_states[variable_arrival_keys.index] = subset_arrival_states.values
-
-    # Which columns do we want to keep? Potentially need to curb this.
-    next_df = pd.DataFrame(
-        data=state_space.state_space.loc[
-            arrival_states[arrival_states != "terminal"]
-        ].values,
-        columns=state_space.state_space.columns,
-        index=arrival_states[arrival_states != "terminal"].index,
-    )
-    next_df["state_key"] = (
-        arrival_states[arrival_states != "terminal"].astype(int).values
-    )
-
-    next_df = (
-        pd.concat(
-            [
-                current_df.loc[arrival_states[arrival_states == "terminal"].index],
-                next_df,
-            ]
-        )
-        if (arrival_states == "terminal").any()
-        else next_df
-    )
-
-    next_df = next_df.astype(model_options.get("dtypes", {}))
-    next_df = build_covariates(next_df, model_options.get("covariates", {}))
-
-    return next_df
 
 
 def _attach_information_to_simulated_df(df, state_space, state_space_info, covariates):
