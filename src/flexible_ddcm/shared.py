@@ -27,7 +27,10 @@ def build_covariates(df, covariates):
     for col, definition in covariates.items():
         if col in df:
             continue
-        df[col] = df.eval(definition)
+        try:
+            df[col] = df.eval(definition)
+        except pd.errors.UndefinedVariableError:
+            continue
         if df[col].dtype == bool:
             df[col] = df[col].astype(int)
     return df

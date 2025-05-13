@@ -134,7 +134,7 @@ def simulate(
         params,
         model_options,
         state_space,
-        transition_function.get("subjective")
+        transition_function.get("subjective", transition_function)
         if type(transition_function) == dict
         else transition_function,
         reward_function,
