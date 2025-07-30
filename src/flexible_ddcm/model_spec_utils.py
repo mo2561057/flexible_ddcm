@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import scipy
 
-from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.shared import pandas_dot
 
 
@@ -92,8 +91,8 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
     length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}"],
         states,
-        get_scalar_from_pandas_object(params, ("transition_max", choice)),
-        get_scalar_from_pandas_object(params, ("transition_min", choice)),
+        params.loc[("transition_max", choice)],
+        params.loc[("transition_min", choice)],
     )
 
     dropout_length = _assign_probabilities(
@@ -185,8 +184,8 @@ def lifetime_wages(
     """Generate wages until the age of 50."""
     wage_params = params.loc[wage_key]
     nonpec_params = params.loc[nonpec_key]
-    discount = get_scalar_from_pandas_object(params, discount_key)
-    std = get_scalar_from_pandas_object(params, shock_std_key)
+    discount = params.loc[discount_key]
+    std = params.loc[shock_std_key]
 
     # Calculate relevant values:
     final_wage_dict = {}
