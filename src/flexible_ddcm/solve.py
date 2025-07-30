@@ -7,7 +7,6 @@ import pandas as pd
 import scipy
 
 from flexible_ddcm.rewards import calculate_rewards_state_choice_space
-from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
 
