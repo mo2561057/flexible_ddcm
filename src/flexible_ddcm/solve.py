@@ -9,6 +9,8 @@ from flexible_ddcm.rewards import calculate_rewards_state_choice_space
 from flexible_ddcm.shared import get_scalar_from_pandas_object
 from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
+from joblib import delayed
+from joblib import Parallel
 
 
 def solve(
@@ -44,46 +46,76 @@ def solve(
     # Settle all states that are continuation values only.
     for _, locs in reversed(state_grouper.items()):
         # This could be paralellized
-        for variable_key, locs_variable in (
+
+        groups = (
             state_space.state_space.loc[locs].groupby("variable_key").groups.items()
-        ):
-            choices = state_space.variable_key_to_choice_set[variable_key]
-            choice_key = state_space.choice_set_to_choice_key[tuple(choices)]
+        )
+        rslt = Parallel(n_jobs=-1)(  # -1 = use all available CPUs
+            delayed(process_choice_specific_values)(
+                variable_key,
+                transitions,
+                rewards,
+                continuation_values,
+                params,
+                state_space,
+                map_transition_to_state_choice_entries,
+                locs_variable,
+            )
+            for variable_key, locs_variable in groups
+        )
 
-            if choices:
-                
-                (
-                    choice_specific_value_function_key,
-                    continuation_values_key,
-                ) = get_choice_specific_values(
-                    variable_key,
-                    transitions,
-                    rewards,
-                    continuation_values,
-                    choices,
-                    params,
-                    state_space,
-                    map_transition_to_state_choice_entries,
-                )
-
-                continuation_values[locs_variable] = continuation_values_key.loc[
-                    locs_variable
-                ].values
-
-                choice_specific_value_function[choice_key].append(
-                    choice_specific_value_function_key
-                )
-
-            else:
-                continuation_values.loc[locs_variable, "continuation_value"] = np.nan
+    # Unpack
+    for tup in rslt:
+        continuation_values[tup[0]] = tup[2].loc[tup[0]].values
+        choice_specific_value_function[tup[1]].append(tup[3])
 
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
     }
+
     continuation_values = pd.DataFrame(
         continuation_values, columns=["continuation_value"]
     ).dropna(axis=0)
     return continuation_values, choice_specific_value_function, transitions
+
+
+def process_choice_specific_values(
+    variable_key,
+    transitions,
+    rewards,
+    continuation_values,
+    params,
+    state_space,
+    map_transition_to_state_choice_entries,
+    locs_variable,
+):
+    choices = state_space.variable_key_to_choice_set[variable_key]
+    choice_key = state_space.choice_set_to_choice_key[tuple(choices)]
+
+    if choices:
+
+        (
+            choice_specific_value_function_key,
+            continuation_values_key,
+        ) = get_choice_specific_values(
+            variable_key,
+            transitions,
+            rewards,
+            continuation_values,
+            choices,
+            params,
+            state_space,
+            map_transition_to_state_choice_entries,
+        )
+        return (
+            locs_variable,
+            choice_key,
+            continuation_values_key,
+            choice_specific_value_function_key,
+        )
+
+    else:
+        return locs_variable, False, False, False
 
 
 def get_choice_specific_values(
@@ -139,10 +171,14 @@ def get_continuation_value_for_transitions(
     # Need to differentiate between different scenarios:
     # Accomodate the new sceanrio as well.
     rewards_transition = rewards[
-        state_space.state_and_choice_to_state_choice[choice][transitions.index.values].astype(int)
+        state_space.state_and_choice_to_state_choice[choice][
+            transitions.index.values
+        ].astype(int)
     ]
-    return transitions.values * (rewards_transition.reshape(
-        len(rewards_transition),1) + continuation_values * discount)
+    return transitions.values * (
+        rewards_transition.reshape(len(rewards_transition), 1)
+        + continuation_values * discount
+    )
 
 
 def _map_continuation_to_transition(
