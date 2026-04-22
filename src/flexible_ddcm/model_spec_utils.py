@@ -4,7 +4,6 @@ import functools
 import numpy as np
 import pandas as pd
 import scipy
-
 from flexible_ddcm.shared import pandas_dot
 
 
@@ -85,6 +84,7 @@ def work_transition(states):
 
 
 def nonstandard_academic_risk(states, params, choice, variable_state, suffix=""):
+
     age, initial_schooling, _ = variable_state
     dropout = _logit(params.loc[f"transition_risk_{choice}{suffix}"], states)
 
@@ -97,6 +97,38 @@ def nonstandard_academic_risk(states, params, choice, variable_state, suffix="")
 
     dropout_length = _assign_probabilities(
         params.loc[f"transition_length_dropout_{choice}{suffix}"], states
+    )
+
+    out = pd.DataFrame(index=states.index)
+    out[[(col + age, choice, choice) for col in length]] = np.einsum(
+        "ij,i->ij", length, dropout
+    )
+
+    out[[(col + age, initial_schooling, choice) for col in dropout_length]] = np.einsum(
+        "ij,i->ij", dropout_length, (1 - dropout)
+    )
+    return out
+
+
+def nonstandard_academic_risk_estimated_dropout_duration(
+    states, params, choice, variable_state, suffix=""
+):
+
+    age, initial_schooling, _ = variable_state
+    dropout = _logit(params.loc[f"transition_risk_{choice}{suffix}"], states)
+
+    length = _poisson_length(
+        params.loc[f"transition_length_{choice}{suffix}_dropout"],
+        states,
+        params.loc[("transition_max", f"{choice}_dropout")],
+        params.loc[("transition_min", f"{choice}_dropout")],
+    )
+
+    dropout_length = _poisson_length(
+        params.loc[f"transition_length_{choice}{suffix}"],
+        states,
+        params.loc[("transition_max", choice)],
+        params.loc[("transition_min", choice)],
     )
 
     out = pd.DataFrame(index=states.index)
