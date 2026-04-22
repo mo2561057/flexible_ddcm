@@ -118,17 +118,17 @@ def nonstandard_academic_risk_estimated_dropout_duration(
     dropout = _logit(params.loc[f"transition_risk_{choice}{suffix}"], states)
 
     length = _poisson_length(
-        params.loc[f"transition_length_{choice}{suffix}_dropout"],
-        states,
-        params.loc[("transition_max", f"{choice}_dropout")],
-        params.loc[("transition_min", f"{choice}_dropout")],
-    )
-
-    dropout_length = _poisson_length(
         params.loc[f"transition_length_{choice}{suffix}"],
         states,
         params.loc[("transition_max", choice)],
         params.loc[("transition_min", choice)],
+    )
+
+    dropout_length = _poisson_length(
+        params.loc[f"transition_length_dropout_{choice}{suffix}"],
+        states,
+        params.loc[("transition_max", f"dropout_{choice}")],
+        params.loc[("transition_min", f"dropout_{choice}")],
     )
 
     out = pd.DataFrame(index=states.index)
