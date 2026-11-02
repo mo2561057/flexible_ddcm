@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from flexible_ddcm.shared import build_covariates
 from flexible_ddcm.solve import solve
+from flexible_ddcm.solve_fast import solve_fast
 from flexible_ddcm.state_space import create_state_space
 from flexible_ddcm.transitions import build_transition_func_from_params
 
@@ -90,7 +91,9 @@ def get_simulate_func(
     initial_states,
     auxiliary_function=lambda x, y, z: (y, z),
     create_next_period_df=create_next_period_df_transition_func,
+    fast_solve=False,
 ):
+    """Build the simulate function. ``fast_solve=True`` solves with ``solve_fast``."""
     state_space = create_state_space(model_options)
 
     transition_function, reward_function = auxiliary_function(
@@ -107,6 +110,7 @@ def get_simulate_func(
         map_transition_to_state_choice_entries=map_transition_to_state_choice_entries,
         initial_states=initial_states,
         create_next_period_df=create_next_period_df,
+        fast_solve=fast_solve,
     )
 
 
@@ -120,6 +124,7 @@ def simulate(
     map_transition_to_state_choice_entries,
     initial_states,
     create_next_period_df,
+    fast_solve=False,
 ):
     """For now only iid ev shocks are supported. Shock function can only change things in the
     first period.
@@ -130,7 +135,8 @@ def simulate(
          Has to be a series otherwise will not work for now.
     """
 
-    _, choice_specific_value_functions, transitions = solve(
+    solver = solve_fast if fast_solve else solve
+    _, choice_specific_value_functions, transitions = solver(
         params,
         model_options,
         state_space,
