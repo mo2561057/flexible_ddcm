@@ -1,0 +1,122 @@
+state_space:
+  age:
+    type: integer_grid
+    start: 0
+    lowest: 0
+    highest: 4
+    fixed: False
+  expected_wage_primary:
+    type: list
+    start: custom
+    lowest: 8
+    highest: 8.5
+    n_points: 3
+    list:
+      - 8
+      - 8.2
+      - 8.5
+    fixed: False
+  expected_wage_secondary:
+    type: list
+    start: custom
+    lowest: 8.9
+    highest: 9.6
+    n_points: 3
+    list:
+      - 8.9
+      - 9.1
+      - 9.6
+    fixed: False
+  unemployment_rate:
+    type: list
+    start: custom
+    n_points: 3
+    lowest: 10
+    highest: 20
+    list:
+      - 10
+      - 14
+      - 20
+    fixed: False
+  lagged_choice:
+    type: list
+    start: high_attendance
+    list:
+      - high_attendance
+      - medium_attendance
+      - low_attendance
+      - very_low_attendance
+      - work
+    fixed: False
+  type:
+    type: list
+    start: random_internal
+    list:
+      - 0
+      - 1
+      - 2
+    fixed: True
+  degree:
+    type: list
+    start: 0
+    list:
+      - 0
+      - 1
+    fixed: False
+
+    
+choices:
+  terminal_choices:
+    - work
+  choice_sets:
+    high_attendance:
+      - age<3
+    medium_attendance:
+      - age<3
+    low_attendance:
+      - age<3
+    very_low_attendance:
+      - age<3
+    work:
+      - age<4
+  choice_sets_solution:
+    high_attendance:
+      - age<3
+    medium_attendance:
+      - age<3
+    low_attendance:
+      - age<3
+    very_low_attendance:
+      - age<3
+    work:
+      - age<4
+      
+
+covariates:
+  terminal: age==3
+  constant: 1
+  primary: degree==0
+  secondary: degree==1
+  high_attendance: lagged_choice == "high_attendance"
+  medium_attendance: lagged_choice == "medium_attendance"
+  low_attendance: lagged_choice == "low_attendance"
+  very_low_attendance: lagged_choice == "very_low_attendance"
+  type_1: type == 1
+  type_2: type == 2
+  type_3: type == 3
+  first_round: age==1
+  first_round_expectations_primary: (age==1)*(expected_wage_primary - 8.72)
+  first_round_expectations_secondary: (age==1)*(expected_wage_secondary - 9.17)
+  expected_wage_primary_norm: (expected_wage_primary - 8.72)
+  expected_wage_secondary_norm: (expected_wage_secondary - 9.17)
+  second_round: age==2
+  third_round: age==3
+  third_round_very_low: (lagged_choice == "very_low_attendance") and (age==2)
+
+
+state_space_filter:
+  - (age<3) & (degree==1)
+
+dtype: object
+n_simulation_agents: 10000
+seed: 3456

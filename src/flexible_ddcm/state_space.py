@@ -45,15 +45,39 @@ def create_state_space(model_options):
 
     state_space["choice_key"] = choice_key_df.values
 
-    # Get state space indexer.
-    state_space_indexer = {
-        tuple(state_space.loc[ix, list(states.keys())]): ix for ix in state_space.index
-    }
+    # Get state space indexer. With model_options["lean_state_space"] the dicts
+    # over all states and state-choice combinations are not built (they dominate
+    # memory in large models); flexible_ddcm.fast then locates states through
+    # (fixed key, variable key).
+    lean = model_options.get("lean_state_space", False)
+    if lean:
+        state_space_indexer = None
+        state_choice_space_indexer = None
+    else:
+        state_space_indexer = dict(
+            zip(
+                state_space[list(states.keys())].itertuples(index=False, name=None),
+                state_space.index,
+            )
+        )
+        state_choice_space_indexer = dict(
+            zip(
+                state_choice_space[list(states.keys()) + ["choice"]].itertuples(
+                    index=False, name=None
+                ),
+                state_choice_space.index,
+            )
+        )
 
-    state_choice_space_indexer = {
-        tuple(state_choice_space.loc[ix, list(states.keys()) + ["choice"]]): ix
-        for ix in state_choice_space.index
-    }
+    fixed_state_space = state_space.loc[
+        ~state_space.fixed_key.duplicated(), fixed_states + ["fixed_key"]
+    ].set_index("fixed_key")
+    fixed_state_space_indexer = dict(
+        zip(
+            fixed_state_space[fixed_states].itertuples(index=False, name=None),
+            fixed_state_space.index,
+        )
+    )
 
     # Need this only for indexer
     variable_state_space = state_space.loc[
@@ -61,14 +85,14 @@ def create_state_space(model_options):
         [col for col in states if col not in fixed_states] + ["variable_key"],
     ].set_index("variable_key")
 
-    variable_state_space_indexer = {
-        tuple(
-            variable_state_space.loc[
-                ix, [col for col in states if col not in fixed_states]
-            ]
-        ): ix
-        for ix in variable_state_space.index
-    }
+    variable_state_space_indexer = dict(
+        zip(
+            variable_state_space[
+                [col for col in states if col not in fixed_states]
+            ].itertuples(index=False, name=None),
+            variable_state_space.index,
+        )
+    )
 
     (
         state_to_fixed_key,
@@ -77,7 +101,7 @@ def create_state_space(model_options):
         choice_set_to_choice_key,
         state_and_choice_to_state_choice,
     ) = create_derived_opjects(
-        state_space, choice_key_to_choice_set, state_choice_space
+        state_space, choice_key_to_choice_set, state_choice_space, lean=lean
     )
 
     state_space_container = namedtuple(
@@ -96,6 +120,8 @@ def create_state_space(model_options):
             "choice_set_to_choice_key",
             "states",
             "state_and_choice_to_state_choice",
+            "fixed_states",
+            "fixed_state_space_indexer",
         ],
     )
 
@@ -113,11 +139,30 @@ def create_state_space(model_options):
         choice_set_to_choice_key,
         list(states.keys()),
         state_and_choice_to_state_choice,
+        fixed_states,
+        fixed_state_space_indexer,
     )
 
 
 def _create_state_space_array(states, model_options):
-    state_space = _create_product_array(states)
+    """Product of all state grids, filtered.
+
+    If model_options["variable_states"] (a DataFrame of admissible combinations of
+    the non-fixed states, e.g. the states reachable from the start state) is given,
+    only those combinations are crossed with the product of the fixed states. This
+    avoids building the full product when there are many variable states.
+    """
+    variable_states = model_options.get("variable_states")
+    if variable_states is None:
+        state_space = _create_product_array(states)
+    else:
+        fixed = {
+            name: grid
+            for name, grid in states.items()
+            if model_options["state_space"][name]["fixed"]
+        }
+        state_space = variable_states.merge(_create_product_array(fixed), how="cross")
+        state_space = state_space[list(states)]
     # Filter state space
     for definition in model_options.get("state_space_filter", []):
         state_space = state_space[~state_space.eval(definition)]
@@ -125,7 +170,26 @@ def _create_state_space_array(states, model_options):
     state_space.index = range(state_space.shape[0])
     # Build covariats
     state_space = build_covariates(state_space, model_options.get("covariates", {}))
+    if model_options.get("lean_state_space", False):
+        state_space = _downcast_integers(state_space)
     return state_space
+
+
+def _downcast_integers(df):
+    """0/1 columns to int8, other integer columns to int16 where they fit.
+
+    int16 (not int8) for general integers keeps products such as squared
+    experience computed from state columns within range.
+    """
+    for col in df.columns:
+        if not (pd.api.types.is_integer_dtype(df[col]) or df[col].dtype == bool):
+            continue
+        low, high = df[col].min(), df[col].max()
+        if low >= 0 and high <= 1:
+            df[col] = df[col].astype(np.int8)
+        elif low >= np.iinfo(np.int16).min and high <= np.iinfo(np.int16).max:
+            df[col] = df[col].astype(np.int16)
+    return df
 
 
 def _create_product_array(array_dict):
@@ -143,9 +207,12 @@ def _create_product_array(array_dict):
     )
 
 
-def create_derived_opjects(state_space, choice_key_to_choice_set, state_choice_space):
-    variable_and_fixed_key_to_state = np.zeros(
-        (state_space.fixed_key.max() + 1, state_space.variable_key.max() + 1)
+def create_derived_opjects(
+    state_space, choice_key_to_choice_set, state_choice_space, lean=False
+):
+    # -1 marks (fixed, variable) combinations removed by the state space filter.
+    variable_and_fixed_key_to_state = np.full(
+        (state_space.fixed_key.max() + 1, state_space.variable_key.max() + 1), -1
     )
 
     variable_and_fixed_key_to_state[
@@ -159,7 +226,8 @@ def create_derived_opjects(state_space, choice_key_to_choice_set, state_choice_s
 
     state_to_fixed_key = state_to_fixed_key.astype(int)
 
-    state_and_choice_to_state_choice = {
+    # Only used by the original solver; skipped for lean state spaces.
+    state_and_choice_to_state_choice = {} if lean else {
         choice: np.zeros(state_choice_space.state_key.max() + 1)
         for choice in state_choice_space.choice.unique()
     }

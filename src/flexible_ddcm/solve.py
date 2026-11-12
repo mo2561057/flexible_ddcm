@@ -1,5 +1,6 @@
 """Solve the model."""
 import functools
+import os
 import itertools
 
 import numpy as np
@@ -50,8 +51,11 @@ def solve(
         groups = (
             state_space.state_space.loc[locs].groupby("variable_key").groups.items()
         )
-        rslt = Parallel(n_jobs=-1)(  # -1 = use all available CPUs
-            delayed(process_choice_specific_values)(
+        # n_jobs configurable via FDDCM_N_JOBS; serial by default (joblib pickles the
+        # full transition dict per task).
+        n_jobs = int(os.environ.get("FDDCM_N_JOBS", "1"))
+        args = [
+            (
                 variable_key,
                 transitions,
                 rewards,
@@ -62,12 +66,21 @@ def solve(
                 locs_variable,
             )
             for variable_key, locs_variable in groups
-        )
+        ]
+        if n_jobs == 1:
+            rslt = [process_choice_specific_values(*a) for a in args]
+        else:
+            rslt = Parallel(n_jobs=n_jobs)(
+                delayed(process_choice_specific_values)(*a) for a in args
+            )
 
-    # Unpack
-    for tup in rslt:
-        continuation_values[tup[0]] = tup[2].loc[tup[0]].values
-        choice_specific_value_function[tup[1]].append(tup[3])
+        # Unpack inside the age loop, otherwise earlier ages read
+        # NaN continuation values.
+        for tup in rslt:
+            if tup[1] is False:
+                continue
+            continuation_values[tup[0]] = tup[2].loc[tup[0]].values
+            choice_specific_value_function[tup[1]].append(tup[3])
 
     choice_specific_value_function = {
         key: pd.concat(value) for key, value in choice_specific_value_function.items()
